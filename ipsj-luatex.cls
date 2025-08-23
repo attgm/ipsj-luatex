@@ -427,6 +427,12 @@
   \seq_if_empty:NF \g__ipsj_authors_seq % Authors
   \__ipsj_author_output:
   \vskip\Jauthorjreceivesep
+  \__ipsj_print_detes:
+  \vskip\Jreceivejabstsep
+  \__ipsj_print_abstract:
+  \vskip\Jabstsepjkeyword
+  \__ipsj_print_keyword:
+  \vskip\Jkeywordetitle
   \end{center}
 }
 
