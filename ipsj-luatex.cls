@@ -196,6 +196,11 @@
   head_space=22mm
 ]{jlreq}
 
+
+\jlreqsetup {
+  footnote_second_indent=2\zw
+}
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Required packages
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -262,6 +267,7 @@
   \seq_gput_right:Nn \g__ipsj_affiliations_seq { #1 }
   \prop_gput:Nnn \g__ipsj_affiliation_labels_prop { #1 } { #2 }
   \prop_gput:NnV \g__ipsj_affiliation_indexes_prop { #1 } { \g__ipsj_affiliation_count_int }
+  
 }
 
 \NewDocumentCommand \paffiliate { m m }
@@ -283,7 +289,12 @@
 {
     \seq_put_right:Nn \g__ipsj_authors_seq { #1 }
     \seq_put_right:Nn \g__ipsj_authors_en_seq { #2 }
-    \seq_put_right:Nx \g__ipsj_authors_affil_seq { #3 }
+    \seq_put_right:Nn \g__ipsj_authors_affil_seq { #3 }
+  \IfNoValueTF{#4}{
+    \seq_put_right:Nn \g__ipsj_authors_email_seq { }
+  }{
+    \seq_put_right:Nn \g__ipsj_authors_email_seq { #4 }
+  }
 }
 
 % Temporary variables for author processing
@@ -354,28 +365,28 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \skip_new:N \shubetutitlesep
-\skip_set:Nn \shubetutitlesep { 6.2mm } % default 10mm
 \skip_new:N \JEhonbunsep
-\skip_set:Nn \JEhonbunsep { 13.7mm } % default 15mm
-
 \skip_new:N \Jtitlejauthorsep
-\skip_set:Nn \Jtitlejauthorsep { 9mm } % default 10mm
 \skip_new:N \Jauthorjreceivesep
-\skip_set:Nn \Jauthorjreceivesep { 6.5mm } % default 7mm
 \skip_new:N \Jreceivejabstsep
-\skip_set:Nn \Jreceivejabstsep { 2.5mm } % default 5mm
 \skip_new:N \Jabstsepjkeyword
-\skip_set:Nn \Jabstsepjkeyword { 5.5mm } % default 5mm
 \skip_new:N \Jkeywordetitle
-\skip_set:Nn \Jkeywordetitle { 14.2mm } % default 16mm
 \skip_new:N \Jetitleeauthor
-\skip_set:Nn \Jetitleeauthor { 5.5mm } % default 7mm
 \skip_new:N \Jeauthorereceivesep
-\skip_set:Nn \Jeauthorereceivesep { 5.5mm } % default 6.5mm
 \skip_new:N \Jereceiveeabstsep
-\skip_set:Nn \Jereceiveeabstsep { 1.5mm } % default 4.5mm
 \skip_new:N \Jeabstekeywordsep
-\skip_set:Nn \Jeabstekeywordsep { 5mm } % default 5mm
+
+\skip_set:Nn \shubetutitlesep { 6.2mm } 
+\skip_set:Nn \JEhonbunsep { 13.7mm } 
+\skip_set:Nn \Jtitlejauthorsep { 9mm } 
+\skip_set:Nn \Jauthorjreceivesep { 6.5mm }
+\skip_set:Nn \Jreceivejabstsep { 2.5mm } 
+\skip_set:Nn \Jabstsepjkeyword { 5.5mm }
+\skip_set:Nn \Jkeywordetitle { 14.2mm } 
+\skip_set:Nn \Jetitleeauthor { 5.5mm } 
+\skip_set:Nn \Jeauthorereceivesep { 5.5mm } 
+\skip_set:Nn \Jereceiveeabstsep { 1.5mm } 
+\skip_set:Nn \Jeabstekeywordsep { 5mm } 
 
 \def\titlefont{ \fontsize{26\JQ}{34\h} \bfseries\gtfamily }
 \def\etitlefont{ \fontsize{20\Q}{22\h}\mathversion{bold}\selectfont }
@@ -417,7 +428,6 @@
     \__ipsj_affiliate_output:
 }
 
-
 \RenewDocumentCommand \@maketitle { }
 {
   \begin{center}
@@ -425,14 +435,17 @@
   { \titlefont \tl_use:N \g__ipsj_title_jp_tl } \par
   \vskip\Jtitlejauthorsep
   \seq_if_empty:NF \g__ipsj_authors_seq % Authors
-  \__ipsj_author_output:
+  \__ipsj_author_output:Nn \g__ipsj_authors_seq \authorfont
   \vskip\Jauthorjreceivesep
-  \__ipsj_print_detes:
+%  \__ipsj_print_detes:
   \vskip\Jreceivejabstsep
   \__ipsj_print_abstract:
   \vskip\Jabstsepjkeyword
   \__ipsj_print_keyword:
   \vskip\Jkeywordetitle
+  { \etitlefont \tl_use:N \g__ipsj_title_en_tl } \par
+  \vskip\Jetitleeauthor
+  \__ipsj_author_output:Nn \g__ipsj_authors_en_seq \eauthorfont
   \end{center}
 }
 
@@ -440,14 +453,19 @@
 % Author output function
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \int_new:N \l_idx_int
+\int_new:N \l__email_idx_int
+\def\rparen{)}%%
+
 \cs_generate_variant:Nn \seq_set_split:Nnn {NnV}
 
-\cs_new:Npn \__ipsj_author_output:
+
+\cs_new:Npn \__ipsj_author_output:Nn #1 #2
 {
-    \int_zero:N \l_idx_int
-    \seq_map_inline:Nn \g__ipsj_authors_seq {
+  \int_zero:N \l_idx_int
+    \int_zero:N \l__email_idx_int
+    \seq_map_inline:Nn #1 {
       \int_incr:N \l_idx_int
-      {\authorfont ##1}
+      {#2 ##1}
       \tl_set:Nx \l_tmpa_tl { \seq_item:Nn \g__ipsj_authors_affil_seq { \l_idx_int } }
       \seq_clear:N \l_tmpa_seq
       \tl_if_empty:NF \l_tmpa_tl {
@@ -461,6 +479,11 @@
               { \seq_put_right:NV \l_tmpa_seq { \textdagger \l_tmpb_int } } { }             
             }
         }
+        \tl_set:Nx \l_tmpa_tl { \seq_item:Nn \g__ipsj_authors_email_seq { \l_idx_int } }
+        \tl_if_empty:NF \l_tmpa_tl {
+          \int_incr:N \l__email_idx_int
+          \seq_put_right:NV \l_tmpa_seq { \l__email_idx_int\rparen }
+        }
         \seq_if_empty:NF \l_tmpa_seq {
           \textsuperscript{ \seq_use:Nn \l_tmpa_seq { , } }
         }
@@ -470,7 +493,7 @@
     \par
 }
 
-\def\rparen{)}%%
+
 
 \cs_new:Npn \__ipsj_affiliate_output:
 {
@@ -480,12 +503,23 @@
         \prop_get:NnN \g__ipsj_affiliation_indexes_prop { ##1 } \l_tmpa_int
         \footnotetext[\l_tmpa_int]{ \l_tmpa_tl }
     }
-    \renewcommand{\thefootnote}{\textdagger\@arabic{\c@footnote}\protect\hphantom{\rparen}}
+    \renewcommand{\thefootnote}{\textdagger\@arabic{\c@footnote}}
     %\renewcommand{\thefootnote}{\fnsymbol{footnote}}
     \seq_map_inline:Nn \g__ipsj_paffiliations_seq {
         \prop_get:NnN \g__ipsj_affiliation_labels_prop { ##1 } \l_tmpa_tl
         \prop_get:NnN \g__ipsj_paffiliation_indexes_prop { ##1 } \l_tmpa_int
         \footnotetext[\l_tmpa_int]{ \l_tmpa_tl }
+    }
+    \renewcommand{\thefootnote}{\@arabic{\c@footnote}\rparen}
+    %\renewcommand{\thefootnote}{\fnsymbol{footnote}}
+    \int_zero:N \l__email_idx_int
+    \seq_map_inline:Nn \g__ipsj_authors_email_seq {
+      \tl_set:Nx \l_tmpa_tl { ##1 }
+      \tl_if_empty:NF \l_tmpa_tl {
+        \int_incr:N \l__email_idx_int
+        \footnotetext[\l__email_idx_int]{ \l_tmpa_tl }
+      }
+        
     }
 }
 
