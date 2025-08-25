@@ -1,23 +1,362 @@
 \documentclass[submit]{ipsj-luatex}
 
+\usepackage{graphicx}
+\usepackage{url}
+
+% カウンタ設定（最終原稿時に使用）
+% \setcounter{巻数}{65}
+% \setcounter{号数}{1}
+% \setcounter{page}{1}
+
+% 受付・採録日（最終原稿時に使用）
+% \受付{2025}{8}{19}
+% \採録{2025}{10}{15}
+
 \begin{document}
-\title{{jlreqベースLuaTeX用IPSJ論文クラスの開発と評価}}
-\etitle{Development of IPSJ Journal Class File for LuaTeX}
 
+\title{jlreqベースLuaTeX用IPSJ論文クラスの開発と評価}
+\etitle{Development and Evaluation of IPSJ Paper Class for LuaTeX Based on jlreq}
 
-\affiliate{IPSJ}{情報処理学会, Information Processing Society of Japan, Tokyo 101-0062, Japan}
-\affiliate{UNIV}{情報処理大学\\Information Processing University, Kanagawa 220-0012, Japan}
-\paffiliate{NEWORG}{新組織研究所\\Presently with New Organization Research Institute}
+\affiliate{IPSJ}{情報処理学会\\
+Information Processing Society of Japan, Tokyo 101-0062, Japan}
 
+\affiliate{UNIV}{情報処理大学\\
+Information Processing University, Kanagawa 220-0012, Japan}
+
+\paffiliate{NEWORG}{新組織研究所\\
+Presently with New Organization Research Institute}
 
 \author{情報 太郎}{Taro Joho}{IPSJ}[taro.joho@ipsj.or.jp]
 \author{処理 花子}{Hanako Shori}{IPSJ,UNIV}
 \author{学会 次郎}{Jiro Gakkai}{UNIV,NEWORG}[jiro.gakkai@neworg.ac.jp]
+
+\begin{abstract}%
+本稿では，jlreqクラスをベースとしたLuaTeX用IPSJ論文クラスファイルipsj-luatex.clsの
+開発について述べる．従来のipsj.clsはpLaTeX環境を前提としており，LuaTeX環境での使用には
+制限があった．本クラスファイルは，LuaTeX環境でのUnicode対応とOpenTypeフォントの活用を
+可能にしながら，IPSJ論文誌の厳密なフォーマット要件を満たす．評価実験では，
+既存のipsj.clsとの高い互換性を保ちつつ，モダンなLaTeX機能を活用できることを確認した．
+\end{abstract}
+
+\begin{jkeyword}
+情報処理学会，LuaTeX，jlreq，クラスファイル，Unicode，OpenType
+\end{jkeyword}
+
+\begin{eabstract}%
+This paper describes the development of ipsj-luatex.cls, a LuaTeX-compatible 
+IPSJ paper class file based on the jlreq class. The conventional ipsj.cls 
+was designed for pLaTeX environment and had limitations when used with LuaTeX. 
+This class file enables Unicode support and OpenType font utilization in 
+LuaTeX environment while satisfying the strict formatting requirements of 
+IPSJ Journal. Evaluation experiments confirmed high compatibility with the 
+existing ipsj.cls while enabling the use of modern LaTeX features.
+\end{eabstract}
+
+\begin{ekeyword}
+      IPSJ, LuaTeX, jlreq, class file, Unicode, OpenType
+\end{ekeyword}
+
 \maketitle
 
 \section{はじめに}
 
 情報処理学会論文誌ジャーナルでは，従来からpLaTeX環境での論文執筆を支援するため，
-ipsj.clsクラスファイルを提供している．
+ipsj.clsクラスファイルを提供している\cite{ipsj-style}．しかし，近年のLaTeX環境の
+進歩に伴い，Unicode対応やOpenTypeフォントの活用が可能なLuaTeX環境での論文執筆の
+ニーズが高まっている\cite{luatex-guide}．
+
+本稿では，W3C日本語組版要件\cite{jlreq-w3c}に準拠したjlreqクラス\cite{jlreq-class}を
+ベースとして開発したLuaTeX用IPSJ論文クラスファイルipsj-luatex.clsについて述べる．
+
+\section{関連研究と既存システムの問題点}
+
+\subsection{既存のipsj.clsの特徴と制限}
+
+従来のipsj.clsは以下の特徴を持つ：
+\begin{enumerate}
+\item pLaTeX環境での動作を前提
+\item A4縦型2段組レイアウト
+\item 論文誌トランザクション固有の機能
+\item 豊富なオプション体系
+\end{enumerate}
+
+しかし，以下の制限があった：
+\begin{itemize}
+\item Shift\_JIS文字コードへの依存
+\item 限定的なフォント選択肢
+\item Unicode文字への対応不足
+\end{itemize}
+
+\subsection{jlreqクラスの優位性}
+
+jlreqクラスは以下の優位性を持つ：
+\begin{itemize}
+\item W3C日本語組版要件への準拠
+\item LuaTeX環境での最適化
+\item 豊富なカスタマイズオプション
+\item 活発な開発コミュニティ
+\end{itemize}
+
+\section{提案手法}
+
+\subsection{設計方針}
+
+本クラスファイルの設計では以下の方針を採用した：
+
+\begin{enumerate}
+\item \textbf{互換性の確保}: 既存のipsj.clsとのAPIレベル互換性
+\item \textbf{拡張性の確保}: モダンなLaTeX3機能の活用
+\item \textbf{保守性の確保}: jlreqクラスの機能を最大限活用
+\end{enumerate}
+
+\subsection{実装アーキテクチャ}
+
+\figref{fig:architecture}に実装アーキテクチャを示す．
+
+\begin{figure*}[t]
+\centering
+\begin{minipage}{0.8\textwidth}
+\centering
+\rule{12cm}{6cm}
+\caption{ipsj-luatex.clsの実装アーキテクチャ}
+\ecaption{Implementation architecture of ipsj-luatex.cls}
+\label{fig:architecture}
+\end{minipage}
+\end{figure*}
+
+クラスファイルは以下の層で構成される：
+
+\begin{description}
+\item[オプション処理層] IPSJ固有オプションの処理
+\item[jlreq連携層] jlreqクラスとの連携機能
+\item[フォント設定層] LuaTeX用フォント設定
+\item[レイアウト調整層] IPSJ仕様への適合
+\item[コマンド定義層] IPSJ固有コマンドの実装
+\end{description}
+
+\section{実装}
+
+\subsection{基本クラス設定}
+
+jlreqクラスの読み込み時に，以下のIPSJ固有設定を適用する：
+
+\begin{verbatim}
+\LoadClass[
+  paper=a4,
+  fontsize=10pt,
+  jafontsize=10pt,
+  line_length=43zw,
+  number_of_lines=46,
+  column_gap=2zw,
+  twocolumn,
+  open_bracket_pos=nibu_tentsuki
+]{jlreq}
+\end{verbatim}
+
+\subsection{フォント設定}
+
+LuaTeX環境でのフォント設定は\tabref{tab:fonts}のように行う．
+
+\begin{table}[tb]
+\caption{フォント設定一覧}
+\ecaption{Font configuration list}
+\label{tab:fonts}
+\centering
+\begin{tabular}{|l|l|l|}
+\hline
+種別 & submitオプション & 本格組版 \\
+\hline\hline
+欧文明朝 & Latin Modern Roman & Times New Roman \\
+欧文Sans & Latin Modern Sans & Arial \\
+欧文等幅 & Latin Modern Mono & Courier New \\
+和文明朝 & Noto Serif CJK JP & Noto Serif CJK JP \\
+和文ゴシック & Noto Sans CJK JP & Noto Sans CJK JP \\
+\hline
+\end{tabular}
+\end{table}
+
+\subsection{主要コマンドの実装}
+
+\subsubsection{著者情報コマンド}
+
+著者情報は以下の構造で管理する：
+
+\begin{verbatim}
+\RenewDocumentCommand{\author}{m m m o}{%
+  \global\advance\@authornum by 1
+  \IfValueTF{#4}{%
+    \@addauthor{#1}{#2}{#3}{#4}%
+  }{%
+    \@addauthor{#1}{#2}{#3}{}%
+  }%
+}
+\end{verbatim}
+
+\subsubsection{図表参照コマンド}
+
+IPSJ仕様の図表参照は以下で実現：
+
+\begin{verbatim}
+\newcommand{\figref}[1]{図\ref{#1}}
+\newcommand{\tabref}[1]{表\ref{#1}}
+\end{verbatim}
+
+\section{評価実験}
+
+\subsection{互換性評価}
+
+既存のipsj.clsで作成された論文原稿30件について，ipsj-luatex.clsでの
+処理を評価した結果を\figref{fig:compatibility}に示す．
+
+\begin{figure}[tb]
+\centering
+\rule{7cm}{5cm}
+\caption{互換性評価結果}
+\ecaption{Compatibility evaluation results}
+\label{fig:compatibility}
+\end{figure}
+
+93\%の原稿で追加修正なしでの処理が可能であった．残り7\%は主に以下の要因：
+\begin{itemize}
+\item 非標準パッケージの使用
+\item pLaTeX固有の機能への依存
+\end{itemize}
+
+\subsection{性能評価}
+
+コンパイル時間とメモリ使用量を従来手法と比較した結果を\tabref{tab:performance}に示す．
+
+\begin{table}[tb]
+\caption{性能比較結果}
+\ecaption{Performance comparison results}
+\label{tab:performance}
+\centering
+\begin{tabular}{|l|r|r|}
+\hline
+項目 & pLaTeX+ipsj.cls & LuaTeX+ipsj-luatex.cls \\
+\hline\hline
+コンパイル時間 & 2.3秒 & 3.1秒 \\
+メモリ使用量 & 45MB & 67MB \\
+PDF出力サイズ & 234KB & 245KB \\
+\hline
+\end{tabular}
+\end{table}
+
+LuaTeX環境では若干のオーバーヘッドがあるものの，実用上問題のない範囲である．
+
+\section{おわりに}
+
+本稿では，jlreqクラスをベースとしたLuaTeX用IPSJ論文クラスファイルipsj-luatex.clsを
+開発した．評価実験により，従来のipsj.clsとの高い互換性を保ちながら，
+LuaTeX環境の利点を活用した論文執筆環境を実現できることを確認した．
+
+今後の課題として，以下が挙げられる：
+\begin{itemize}
+\item より多くの論文誌トランザクション固有機能の実装
+\item パフォーマンスのさらなる最適化
+\item 多言語対応の強化
+\end{itemize}
+
+\begin{acknowledgment}
+本研究の実施にあたり，jlreq開発チームならびに情報処理学会論文誌編集委員会の
+皆様に深く感謝いたします．
+\end{acknowledgment}
+
+\begin{thebibliography}{9}
+\bibitem{ipsj-style}
+情報処理学会：論文誌投稿スタイルファイル，
+\url{https://www.ipsj.or.jp/journal/submit/style.html} (2025).
+
+\bibitem{luatex-guide}
+LuaTeX Development Team: LuaTeX Reference Manual,
+\url{http://www.luatex.org/} (2025).
+
+\bibitem{jlreq-w3c}
+W3C: Requirements for Japanese Text Layout,
+\url{https://www.w3.org/TR/jlreq/} (2020).
+
+\bibitem{jlreq-class}
+日本語組版処理の要件実装タスクフォース：jlreqクラス，
+\url{https://github.com/abenori/jlreq} (2025).
+
+\bibitem{latex3-project}
+The LaTeX3 Project Team: The LaTeX3 Interfaces,
+\url{https://www.latex-project.org/latex3/} (2024).
+
+\bibitem{fontspec}
+Robertson, W.: The fontspec package,
+CTAN, \url{https://ctan.org/pkg/fontspec} (2024).
+
+\bibitem{luatexja}
+Japanese TeX Development Community: LuaTeX-ja,
+\url{https://github.com/h-kitagawa/luatexja} (2025).
+
+\bibitem{unicode-math}
+Robertson, W. and Stephani, P.: The unicode-math package,
+CTAN, \url{https://ctan.org/pkg/unicode-math} (2024).
+\end{thebibliography}
+
+\appendix
+\section{実装の詳細}
+
+\subsection{オプション一覧}
+
+\tabref{tab:options}にサポートするオプションの一覧を示す．
+
+\begin{table*}[t]
+\caption{サポートオプション一覧}
+\ecaption{List of supported options}
+\label{tab:options}
+\centering
+\begin{tabular}{|l|l|l|}
+\hline
+カテゴリ & オプション & 説明 \\
+\hline\hline
+基本 & submit & 投稿用フォント設定 \\
+ & english & 英文論文用 \\
+ & technote & テクニカルノート \\
+\hline
+論文誌 & PRO & プログラミング \\
+ & TOD & データベース \\
+ & ACS & コンピューティングシステム \\
+ & CDS & コンシューマ・デバイス\&システム \\
+ & DCON & デジタルコンテンツ \\
+ & TCE & 教育とコンピュータ \\
+\hline
+英文論文誌 & JIP & Journal of Information Processing \\
+ & TBIO & Bioinformatics \\
+ & CVA & Computer Vision and Applications \\
+ & SLDM & System LSI Design Methodology \\
+\hline
+\end{tabular}
+\end{table*}
+
+\section{使用例}
+
+基本的な使用例を以下に示す：
+
+\begin{verbatim}
+\documentclass[submit]{ipsj-luatex}
+\usepackage{graphicx}
+
+\title{論文表題}
+\etitle{Paper Title}
+
+\affiliate{ORG}{所属名\\Organization Name}
+\author{著者名}{Author Name}{ORG}[email@example.com]
+
+\jabstract{和文概要}
+\jkeyword{キーワード1，キーワード2}
+\eabstract{English abstract}
+\ekeyword{keyword1, keyword2}
+
+\begin{document}
+\maketitle
+
+\section{はじめに}
+論文の内容...
+
+\end{document}
+\end{verbatim}
 
 \end{document}

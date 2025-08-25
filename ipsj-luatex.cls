@@ -7,7 +7,7 @@
 % and jlreq class
 
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesClass{ipsj-luatex}[2025/08/19 v2.0 IPSJ class for LuaTeX with expl3]
+\ProvidesClass{ipsj-luatex}[2025/08/19 v1.0 IPSJ class for LuaTeX with expl3]
 
 % Engine check
 \RequirePackage{iftex}
@@ -240,23 +240,24 @@
 }
 
 % Abstract and keyword commands
-\NewDocumentCommand \jabstract { m }
+\RenewDocumentEnvironment { abstract } { +b }
+{}
 {
   \tl_gset:Nn \g__ipsj_abstract_jp_tl { #1 }
 }
 
-\NewDocumentCommand \eabstract { m }
-{
+\NewDocumentEnvironment { eabstract } { +b }
+{}{
   \tl_gset:Nn \g__ipsj_abstract_en_tl { #1 }
 }
 
-\NewDocumentCommand \jkeyword { m }
-{
+\NewDocumentEnvironment { jkeyword } { +b }
+{}{
   \tl_gset:Nn \g__ipsj_keyword_jp_tl { #1 }
 }
 
-\NewDocumentCommand \ekeyword { m }
-{
+\NewDocumentEnvironment { ekeyword } { +b }
+{}{
   \tl_gset:Nn \g__ipsj_keyword_en_tl { #1 }
 }
 
@@ -376,8 +377,8 @@
 \skip_new:N \Jereceiveeabstsep
 \skip_new:N \Jeabstekeywordsep
 
-\skip_set:Nn \shubetutitlesep { 6.2mm } 
-\skip_set:Nn \JEhonbunsep { 13.7mm } 
+\skip_set:Nn \shubetutitlesep { 6.2mm }
+\skip_set:Nn \JEhonbunsep { 13.7mm }
 \skip_set:Nn \Jtitlejauthorsep { 9mm } 
 \skip_set:Nn \Jauthorjreceivesep { 6.5mm }
 \skip_set:Nn \Jreceivejabstsep { 2.5mm } 
@@ -388,8 +389,9 @@
 \skip_set:Nn \Jereceiveeabstsep { 1.5mm } 
 \skip_set:Nn \Jeabstekeywordsep { 5mm } 
 
+\def\shubetufont{ \fontsize{18\JQ}{0\h} \selectfont\bfseries\gtfamily}
 \def\titlefont{ \fontsize{26\JQ}{34\h} \bfseries\gtfamily }
-\def\etitlefont{ \fontsize{20\Q}{22\h}\mathversion{bold}\selectfont }
+\def\etitlefont{ \fontsize{20\Q}{22\h} \selectfont\bfseries }
 \def\authorfont{ \fontsize{16\JQ}{22\h} \selectfont }
 \def\eauthorfont{ \fontsize{14\JQ}{18\h} \selectfont }
 \def\abstractfont{ \fontsize{12\JQ}{18\h} \selectfont }
@@ -426,10 +428,13 @@
     \endgroup
     \jlreq@endofmaketitle
     \__ipsj_affiliate_output:
+    \setcounter{footnote}{0}
+    \def\thefootnote{\ifnum\c@footnote>\z@\leavevmode\lower.5ex\hbox{*}\@arabic\c@footnote\fi}
 }
 
 \RenewDocumentCommand \@maketitle { }
 {
+  { \shubetufont }
   \begin{center}
   \vskip\shubetutitlesep  % Title
   { \titlefont \tl_use:N \g__ipsj_title_jp_tl } \par
@@ -443,9 +448,17 @@
   \vskip\Jabstsepjkeyword
   \__ipsj_print_keyword:
   \vskip\Jkeywordetitle
+  \vskip\shubetutitlesep
   { \etitlefont \tl_use:N \g__ipsj_title_en_tl } \par
   \vskip\Jetitleeauthor
   \__ipsj_author_output:Nn \g__ipsj_authors_en_seq \eauthorfont
+  \vskip\Jeauthorereceivesep
+  %
+  \vskip\Jereceiveeabstsep
+  \__ipsj_print_eabstract:
+  \vskip\Jeabstekeywordsep
+  \__ipsj_print_ekeyword:
+  \vskip\JEhonbunsep
   \end{center}
 }
 
@@ -482,7 +495,7 @@
         \tl_set:Nx \l_tmpa_tl { \seq_item:Nn \g__ipsj_authors_email_seq { \l_idx_int } }
         \tl_if_empty:NF \l_tmpa_tl {
           \int_incr:N \l__email_idx_int
-          \seq_put_right:NV \l_tmpa_seq { \l__email_idx_int\rparen }
+          \seq_put_right:NV \l_tmpa_seq { \@alph{\l__email_idx_int}\rparen }
         }
         \seq_if_empty:NF \l_tmpa_seq {
           \textsuperscript{ \seq_use:Nn \l_tmpa_seq { , } }
@@ -510,7 +523,7 @@
         \prop_get:NnN \g__ipsj_paffiliation_indexes_prop { ##1 } \l_tmpa_int
         \footnotetext[\l_tmpa_int]{ \l_tmpa_tl }
     }
-    \renewcommand{\thefootnote}{\@arabic{\c@footnote}\rparen}
+    \renewcommand{\thefootnote}{\@alph{\c@footnote}\rparen}
     %\renewcommand{\thefootnote}{\fnsymbol{footnote}}
     \int_zero:N \l__email_idx_int
     \seq_map_inline:Nn \g__ipsj_authors_email_seq {
@@ -552,7 +565,7 @@
 {
     \begin{minipage}{0.8\textwidth}
         \ekeywordfont
-        \textbf{Keywords:}\hskip.5em
+        {\bfseries\itshape Keywords:}\hskip.5em
         \c_space_tl \tl_use:N \g__ipsj_keyword_en_tl \par
     \end{minipage}\par
 }
@@ -574,12 +587,12 @@
 
 \NewDocumentCommand \figref { m }
 {
-  図\ref{#1}
+  図~\ref{#1}
 }
 
 \NewDocumentCommand \tabref { m }
 {
-  表\ref{#1}
+  表~\ref{#1}
 }
 
 \NewDocumentCommand \figrefstar { m }
