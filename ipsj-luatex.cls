@@ -7,7 +7,7 @@
 % and jlreq class
 
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesClass{ipsj-luatex}[2025/08/19 v2.0 IPSJ class for LuaTeX with expl3]
+\ProvidesClass{ipsj-luatex}[2025/08/19 v1.0 IPSJ class for LuaTeX with expl3]
 
 % Engine check
 \RequirePackage{iftex}
@@ -93,11 +93,16 @@
 % Author and affiliation management
 \int_new:N \g__ipsj_author_count_int
 \int_new:N \g__ipsj_affiliation_count_int
+\int_new:N \g__ipsj_paffiliation_count_int
 \seq_new:N \g__ipsj_authors_seq
 \seq_new:N \g__ipsj_authors_en_seq
+\seq_new:N \g__ipsj_authors_affil_seq
+\seq_new:N \g__ipsj_authors_email_seq
 \seq_new:N \g__ipsj_affiliations_seq
 \seq_new:N \g__ipsj_paffiliations_seq
 \prop_new:N \g__ipsj_affiliation_labels_prop
+\prop_new:N \g__ipsj_affiliation_indexes_prop
+\prop_new:N \g__ipsj_paffiliation_indexes_prop
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Japanese typography dimensions
@@ -175,32 +180,34 @@
 % Process options
 \ProcessKeysOptions { ipsj }
 
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Load base class
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \LoadClass[
   paper=a4paper,
+  twocolumn,
   fontsize=9bp,
   line_length=26zw,
   number_of_lines=46,
-  column_gap=2zw,
-  twocolumn,
+  column_gap=8mm,
   open_bracket_pos=nibu_tentsuki,
-  head_space=22mm,
-  foot_space=25mm
+  head_space=22mm
 ]{jlreq}
+
+
+\jlreqsetup {
+  footnote_second_indent=2\zw
+}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Required packages
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+
 \RequirePackage{luatexja}
 \RequirePackage{luatexja-fontspec}
-\RequirePackage{graphicx}
-\RequirePackage{array}
-\RequirePackage{tabularx}
-\RequirePackage{url}
 \RequirePackage{amsmath}
 \RequirePackage{amsfonts}
 \RequirePackage{amssymb}
@@ -208,24 +215,6 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Font settings
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-\bool_if:NTF \g__ipsj_submit_bool
-{
-  % Use standard fonts for submission
-  \setmainfont{Latin~Modern~Roman}
-  \setsansfont{Latin~Modern~Sans}
-  \setmonofont{Latin~Modern~Mono}
-  \setmainjfont{Noto~Serif~CJK~JP}
-  \setsansjfont{Noto~Sans~CJK~JP}
-}
-{
-  % Use high-quality fonts for publication
-  \setmainfont{Times~New~Roman}
-  \setsansfont{Arial}
-  \setmonofont{Courier~New}
-  \setmainjfont{Noto~Serif~CJK~JP}
-  \setsansjfont{Noto~Sans~CJK~JP}
-}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Counter definitions
@@ -251,83 +240,61 @@
 }
 
 % Abstract and keyword commands
-\NewDocumentCommand \jabstract { m }
+\RenewDocumentEnvironment { abstract } { +b }
+{}
 {
   \tl_gset:Nn \g__ipsj_abstract_jp_tl { #1 }
 }
 
-\NewDocumentCommand \eabstract { m }
-{
+\NewDocumentEnvironment { eabstract } { +b }
+{}{
   \tl_gset:Nn \g__ipsj_abstract_en_tl { #1 }
 }
 
-\NewDocumentCommand \jkeyword { m }
-{
+\NewDocumentEnvironment { jkeyword } { +b }
+{}{
   \tl_gset:Nn \g__ipsj_keyword_jp_tl { #1 }
 }
 
-\NewDocumentCommand \ekeyword { m }
-{
+\NewDocumentEnvironment { ekeyword } { +b }
+{}{
   \tl_gset:Nn \g__ipsj_keyword_en_tl { #1 }
 }
 
 % Affiliation commands
 \NewDocumentCommand \affiliate { m m }
 {
-  \int_gincr:N \g__ipsj_affiliation_count_int
-  \seq_gput_right:Nn \g__ipsj_affiliations_seq { #2 }
-  \prop_gput:Nnn \g__ipsj_affiliation_labels_prop { #1 } { \int_use:N \g__ipsj_affiliation_count_int }
+  \int_incr:N \g__ipsj_affiliation_count_int
+  \seq_gput_right:Nn \g__ipsj_affiliations_seq { #1 }
+  \prop_gput:Nnn \g__ipsj_affiliation_labels_prop { #1 } { #2 }
+  \prop_gput:NnV \g__ipsj_affiliation_indexes_prop { #1 } { \g__ipsj_affiliation_count_int }
+  
 }
 
 \NewDocumentCommand \paffiliate { m m }
 {
-  \int_gincr:N \g__ipsj_affiliation_count_int
-  \seq_gput_right:Nn \g__ipsj_paffiliations_seq { 現在，#2 }
-  \prop_gput:Nnn \g__ipsj_affiliation_labels_prop { #1 } { \int_use:N \g__ipsj_affiliation_count_int }
+  \int_incr:N \g__ipsj_paffiliation_count_int
+  \seq_gput_right:Nn \g__ipsj_paffiliations_seq { #1 }
+  \prop_gput:Nnn \g__ipsj_affiliation_labels_prop { #1 } { 現在，#2 }
+  \prop_gput:NnV \g__ipsj_paffiliation_indexes_prop { #1 } { \g__ipsj_paffiliation_count_int }
 }
 
 % Author command
 \RenewDocumentCommand \author { m m m o }
 {
-  \int_gincr:N \g__ipsj_author_count_int
-  \__ipsj_add_author:nnnn { #1 } { #2 } { #3 } { #4 }
+    \int_gincr:N \g__ipsj_author_count_int
+    \__ipsj_add_author:nnnn { #1 } { #2 } { #3 } { #4 }
 }
 
 \cs_new:Npn \__ipsj_add_author:nnnn #1 #2 #3 #4
 {
-  \tl_new:c { l__ipsj_author_ \int_use:N \g__ipsj_author_count_int _affil_tl }
-  \tl_set:cn { l__ipsj_author_ \int_use:N \g__ipsj_author_count_int _affil_tl } { #3 }
-  
-  % Process affiliation list
-  \tl_new:c { l__ipsj_author_ \int_use:N \g__ipsj_author_count_int _affil_num_tl }
-  \__ipsj_process_affiliations:n { #3 }
-  \tl_set:cx { l__ipsj_author_ \int_use:N \g__ipsj_author_count_int _affil_num_tl } { \l__ipsj_temp_affil_num_tl }
-  
-  % Build author string
-  \tl_set:Nn \l__ipsj_temp_author_tl { #1 }
-  \tl_put_right:Nx \l__ipsj_temp_author_tl { \exp_not:n { $ } \c_math_superscript_token { \tl_use:c { l__ipsj_author_ \int_use:N \g__ipsj_author_count_int _affil_num_tl } } \exp_not:n { $ } }
-  
-  % Add email if provided
-  \IfValueT { #4 }
-  {
-    \tl_put_right:Nn \l__ipsj_temp_author_tl { \footnote{#4} }
-  }
-  
-  \seq_gput_right:NV \g__ipsj_authors_seq \l__ipsj_temp_author_tl
-  \seq_gput_right:Nn \g__ipsj_authors_en_seq { #2 }
-}
-
-\cs_new:Npn \__ipsj_process_affiliations:n #1
-{
-  \tl_clear:N \l__ipsj_temp_affil_num_tl
-  \clist_map_inline:nn { #1 }
-  {
-    \prop_get:NnN \g__ipsj_affiliation_labels_prop { ##1 } \l__ipsj_temp_num_tl
-    \tl_if_empty:NF \l__ipsj_temp_affil_num_tl
-    {
-      \tl_put_right:Nn \l__ipsj_temp_affil_num_tl { , }
-    }
-    \tl_put_right:NV \l__ipsj_temp_affil_num_tl \l__ipsj_temp_num_tl
+    \seq_put_right:Nn \g__ipsj_authors_seq { #1 }
+    \seq_put_right:Nn \g__ipsj_authors_en_seq { #2 }
+    \seq_put_right:Nn \g__ipsj_authors_affil_seq { #3 }
+  \IfNoValueTF{#4}{
+    \seq_put_right:Nn \g__ipsj_authors_email_seq { }
+  }{
+    \seq_put_right:Nn \g__ipsj_authors_email_seq { #4 }
   }
 }
 
@@ -397,416 +364,176 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Make title implementation
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  {
-    \group_begin:
-    \int_zero:N \l_ipsj_offset_email_int
-    \int_set:Nn \l_ipsj_count_int { 1 }
-    \int_incr:N \g__ipsj_author_count_int
-    
-    \int_while_do:nNnn { \l_ipsj_count_int } < { \g__ipsj_author_count_int }
-      {
-        \mbox
-          {
-            \bool_if:NTF \g_ipsj_english_bool
-              {
-                \use:c { authorname \int_use:N \l_ipsj_count_int }
-              }
-              {
-                \use:c { #1 authorname \int_use:N \l_ipsj_count_int }
-              }
-            
-            % Add author labels (affiliations)
-            \null
-            \int_set:Nn \l_ipsj_tempcnta_int 
-              { \use:c { authorlabel@num@ \int_use:N \l_ipsj_count_int } }
-            \int_incr:N \l_ipsj_tempcnta_int
-            \int_set:Nn \l_ipsj_tempcntb_int { 1 }
-            
-            \group_begin:
-            \int_while_do:nNnn { \l_ipsj_tempcntb_int } < { \l_ipsj_tempcnta_int }
-              {
-                \tl_set:Nx \l_ipsj_temp_tl 
-                  { \use:c { authorlabel \int_use:N \l_ipsj_count_int @ \int_use:N \l_ipsj_tempcntb_int } }
-                
-                \textsuperscript
-                  {
-                    \use:c { #1 labelfont }
-                    % Check if affiliate exists, otherwise use paffiliate
-                    \cs_if_exist:cTF { affiliate@num@ \l_ipsj_temp_tl }
-                      {
-                        \use:c { affiliate@num@ \l_ipsj_temp_tl }
-                      }
-                      {
-                        \use:c { paffiliate@num@ \l_ipsj_temp_tl }
-                      }
-                    \ipsj_comma_or_relax_affilabel:
-                  }
-                \int_incr:N \l_ipsj_tempcntb_int
-              }
-            \group_end:
-            
-            % Add email labels
-            \int_set:Nn \l_ipsj_tempcnta_int 
-              { \use:c { authoremail@num@ \int_use:N \l_ipsj_count_int } }
-            \int_compare:nNnF { \l_ipsj_tempcnta_int } = { 0 }
-              { \textsuperscript{,} }
-            \int_incr:N \l_ipsj_tempcnta_int
-            \int_set:Nn \l_ipsj_tempcntb_int { 1 }
-            
-            \int_while_do:nNnn { \l_ipsj_tempcntb_int } < { \l_ipsj_tempcnta_int }
-              {
-                \group_begin:
-                \int_add:Nn \l_ipsj_tempcntb_int { \l_ipsj_offset_email_int }
-                \textsuperscript
-                  {
-                    \use:c { #1 labelfont }
-                    \int_to_alph:n { \l_ipsj_tempcntb_int } \rparen
-                    \ipsj_comma_or_relax_email:
-                  }
-                \group_end:
-                \int_incr:N \l_ipsj_tempcntb_int
-              }
-            
-            \int_decr:N \l_ipsj_tempcntb_int
-            \int_gadd:Nn \l_ipsj_offset_email_int { \l_ipsj_tempcntb_int }
-          }
-        
-        \use:c { #1 break@or@oneskip }
-        \int_incr:N \l_ipsj_count_int
-      }
-    \group_end:
-  }
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Make title implementation
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Make title implementation
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \skip_new:N \shubetutitlesep
-\skip_set:Nn \shubetutitlesep { 6.2mm } % default 10mm
 \skip_new:N \JEhonbunsep
-\skip_set:Nn \JEhonbunsep { 13.7mm } % default 15mm
-
 \skip_new:N \Jtitlejauthorsep
-\skip_set:Nn \Jtitlejauthorsep { 9mm } % default 10mm
 \skip_new:N \Jauthorjreceivesep
-\skip_set:Nn \Jauthorjreceivesep { 6.5mm } % default 7mm
 \skip_new:N \Jreceivejabstsep
-\skip_set:Nn \Jreceivejabstsep { 2.5mm } % default 5mm
 \skip_new:N \Jabstsepjkeyword
-\skip_set:Nn \Jabstsepjkeyword { 5.5mm } % default 5mm
 \skip_new:N \Jkeywordetitle
-\skip_set:Nn \Jkeywordetitle { 14.2mm } % default 16mm
 \skip_new:N \Jetitleeauthor
-\skip_set:Nn \Jetitleeauthor { 5.5mm } % default 7mm
 \skip_new:N \Jeauthorereceivesep
-\skip_set:Nn \Jeauthorereceivesep { 5.5mm } % default 6.5mm
 \skip_new:N \Jereceiveeabstsep
-\skip_set:Nn \Jereceiveeabstsep { 1.5mm } % default 4.5mm
 \skip_new:N \Jeabstekeywordsep
-\skip_set:Nn \Jeabstekeywordsep { 5mm } % default 5mm
 
+\skip_set:Nn \shubetutitlesep { 6.2mm }
+\skip_set:Nn \JEhonbunsep { 13.7mm }
+\skip_set:Nn \Jtitlejauthorsep { 9mm } 
+\skip_set:Nn \Jauthorjreceivesep { 6.5mm }
+\skip_set:Nn \Jreceivejabstsep { 2.5mm } 
+\skip_set:Nn \Jabstsepjkeyword { 5.5mm }
+\skip_set:Nn \Jkeywordetitle { 14.2mm } 
+\skip_set:Nn \Jetitleeauthor { 5.5mm } 
+\skip_set:Nn \Jeauthorereceivesep { 5.5mm } 
+\skip_set:Nn \Jereceiveeabstsep { 1.5mm } 
+\skip_set:Nn \Jeabstekeywordsep { 5mm } 
+
+\def\shubetufont{ \fontsize{18\JQ}{0\h} \selectfont\bfseries\gtfamily}
+\def\titlefont{ \fontsize{26\JQ}{34\h} \bfseries\gtfamily }
+\def\etitlefont{ \fontsize{20\Q}{22\h} \selectfont\bfseries }
+\def\authorfont{ \fontsize{16\JQ}{22\h} \selectfont }
+\def\eauthorfont{ \fontsize{14\JQ}{18\h} \selectfont }
+\def\abstractfont{ \fontsize{12\JQ}{18\h} \selectfont }
+\def\eabstractfont{ \fontsize{12\Q}{15\h} \selectfont }
+\def\keywordfont{ \fontsize{12\JQ}{15\h} \selectfont }
+\def\ekeywordfont{ \fontsize{12\Q}{15\h} \selectfont }
 %%
 
-\def\jtitlefont{ \fontsize{26\JQ}{34\h} \bfseries\gtfamily }
-\def\etitlefont{ \fontsize{20\Q}{22\h}\mathversion{bold}\selectfont }
-
-\def\authorfont{ \fontsize{16\JQ}{22\h} }
-\def\eauthorfont{ \fontsize{14\JQ}{18\h} }
-
-\def\abstractfont{ \fontsize{12\JQ}{18\h} }
-\def\eabstractfont{ \fontsize{12\Q}{15\h} }
-\def\keywordfont{ \fontsize{12\JQ}{15\h} }
-\def\ekeywordfont{ \fontsize{12\Q}{15\h} }
-%%
-
-\RenewDocumentCommand \maketitle { }
+\RenewDocumentCommand \maketitle {}
 {
-  \twocolumn[
-    \begin{center}
-      \__ipsj_make_title_content:
-    \end{center}
-    \vskip 2em
-  ]
+    \par
+    \begingroup
+      \renewcommand{\thefootnote}{\fnsymbol{footnote}}%
+
+      \if@twocolumn
+        \ifnum\col@number=\@ne
+          \@maketitle
+        \else
+          \twocolumn[\@maketitle]%
+        \fi
+      \else
+        \newpage
+        \global\@topnum\z@
+        \@maketitle
+      \fi
+      %
+      \bool_if:nT {!(
+        \tl_if_empty_p:o \@oddhead &&
+        \tl_if_empty_p:o \@evenhead &&
+        \tl_if_empty_p:o \@oddfoot &&
+        \tl_if_empty_p:o \@evenfoot
+      )} { \thispagestyle{plain} }
+      \@thanks
+    \endgroup
+    \jlreq@endofmaketitle
+    \__ipsj_affiliate_output:
+    \setcounter{footnote}{0}
+    \def\thefootnote{\ifnum\c@footnote>\z@\leavevmode\lower.5ex\hbox{*}\@arabic\c@footnote\fi}
 }
 
-\cs_new:Npn \__ipsj_make_title_content:
+\RenewDocumentCommand \@maketitle { }
 {
+  { \shubetufont }
+  \begin{center}
   \vskip\shubetutitlesep  % Title
-  { \jtitlefont \tl_use:N \g__ipsj_title_jp_tl } \par
+  { \titlefont \tl_use:N \g__ipsj_title_jp_tl } \par
   \vskip\Jtitlejauthorsep
-  
   \seq_if_empty:NF \g__ipsj_authors_seq % Authors
-  {
-    { \authorfont \seq_use:Nn \g__ipsj_authors_seq { , } } \par
-    \vskip\Jauthorjreceivesep
-  }
-  \__ipsj_print_dates:
-  \vskip\Jreceivejabstsep%
-    \__ipsj_print_abstract:
+  \__ipsj_author_output:Nn \g__ipsj_authors_seq \authorfont
+  \vskip\Jauthorjreceivesep
+%  \__ipsj_print_detes:
+  \vskip\Jreceivejabstsep
+  \__ipsj_print_abstract:
   \vskip\Jabstsepjkeyword
   \__ipsj_print_keyword:
   \vskip\Jkeywordetitle
-  {\etitlefont \tl_use:N \g__ipsj_title_en_tl } \par
-  \vskip\Jtitlejauthorsep
-  \seq_if_empty:NF \g__ipsj_authors_seq % Authors
-  { \authorfont \authoroutput {} } \par
-    \vskip\Jauthorjreceivesep
-  \__ipsj_print_dates:
-  \vskip\Jreceivejabstsep
+  \vskip\shubetutitlesep
+  { \etitlefont \tl_use:N \g__ipsj_title_en_tl } \par
+  \vskip\Jetitleeauthor
+  \__ipsj_author_output:Nn \g__ipsj_authors_en_seq \eauthorfont
+  \vskip\Jeauthorereceivesep
+  %
+  \vskip\Jereceiveeabstsep
   \__ipsj_print_eabstract:
-  \vskip\Jabstsepjkeyword
+  \vskip\Jeabstekeywordsep
   \__ipsj_print_ekeyword:
-  % Affiliations
-  \__ipsj_print_affiliations:
-  \vskip\JEhonbunsep  
+  \vskip\JEhonbunsep
+  \end{center}
 }
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Author output function
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\int_new:N \l_idx_int
+\int_new:N \l__email_idx_int
+\def\rparen{)}%%
 
-\cs_new:Npn \authoroutput #1
+\cs_generate_variant:Nn \seq_set_split:Nnn {NnV}
+
+
+\cs_new:Npn \__ipsj_author_output:Nn #1 #2
 {
-  \group_begin:
-  \tl_set:Nn \l_ipsj_prefix_tl { #1 }
-  \int_zero:N \l_ipsj_offset_email_int
-  \int_set:Nn \l_ipsj_count_int { 1 }
-  \int_incr:N \g__ipsj_author_count_int
-  
-  \int_while_do:nNnn { \l_ipsj_count_int } < { \g__ipsj_author_count_int }
-  {
-    \mbox
-    {
-      \bool_if:NTF \g__ipsj_english_bool
-      {
-        \use:c { authorname \int_use:N \l_ipsj_count_int }
-      }
-      {
-        \use:c { \l_ipsj_prefix_tl authorname \int_use:N \l_ipsj_count_int }
-      }
-      
-      % Add author labels (affiliations)
-      \null
-      \cs_if_exist:cT { authorlabel@num@ \int_use:N \l_ipsj_count_int }
-      {
-        \int_set:Nn \l_ipsj_tempcnta_int 
-        { \use:c { authorlabel@num@ \int_use:N \l_ipsj_count_int } }
-        \int_incr:N \l_ipsj_tempcnta_int
-        \int_set:Nn \l_ipsj_tempcntb_int { 1 }
-        
-        \group_begin:
-        \int_while_do:nNnn { \l_ipsj_tempcntb_int } < { \l_ipsj_tempcnta_int }
-        {
-          \cs_if_exist:cT { authorlabel \int_use:N \l_ipsj_count_int @ \int_use:N \l_ipsj_tempcntb_int }
-          {
-            \tl_set:Nx \l_ipsj_temp_tl 
-            { \use:c { authorlabel \int_use:N \l_ipsj_count_int @ \int_use:N \l_ipsj_tempcntb_int } }
-            
-            \textsuperscript
-            {
-              \use:c { #1 labelfont }
-              % Check if affiliate exists, otherwise use paffiliate
-              \cs_if_exist:cTF { affiliate@num@ \l_ipsj_temp_tl }
-              {
-                \use:c { affiliate@num@ \l_ipsj_temp_tl }
-              }
-              {
-                \cs_if_exist:cT { paffiliate@num@ \l_ipsj_temp_tl }
-                {
-                  \use:c { paffiliate@num@ \l_ipsj_temp_tl }
-                }
-              }
-              \ipsj_comma_or_relax_affilabel:
+  \int_zero:N \l_idx_int
+    \int_zero:N \l__email_idx_int
+    \seq_map_inline:Nn #1 {
+      \int_incr:N \l_idx_int
+      {#2 ##1}
+      \tl_set:Nx \l_tmpa_tl { \seq_item:Nn \g__ipsj_authors_affil_seq { \l_idx_int } }
+      \seq_clear:N \l_tmpa_seq
+      \tl_if_empty:NF \l_tmpa_tl {
+        \seq_set_split:NnV \l__ipsj_tmp_affil_seq { , } { \l_tmpa_tl }
+
+        \seq_map_inline:Nn \l__ipsj_tmp_affil_seq {
+          \prop_get:NnNTF \g__ipsj_affiliation_indexes_prop { ####1 } \l_tmpa_int
+            { \seq_put_right:NV \l_tmpa_seq { \l_tmpa_int } }
+            { 
+              \prop_get:NnNTF \g__ipsj_paffiliation_indexes_prop { ####1 } \l_tmpb_int
+              { \seq_put_right:NV \l_tmpa_seq { \textdagger \l_tmpb_int } } { }             
             }
-          }
-          \int_incr:N \l_ipsj_tempcntb_int
         }
-        \group_end:
-      }
-      
-      % Add email labels
-      \cs_if_exist:cT { authoremail@num@ \int_use:N \l_ipsj_count_int }
-      {
-        \int_set:Nn \l_ipsj_tempcnta_int 
-        { \use:c { authoremail@num@ \int_use:N \l_ipsj_count_int } }
-        \int_compare:nNnF { \l_ipsj_tempcnta_int } = { 0 }
-        { \textsuperscript{,} }
-        \int_incr:N \l_ipsj_tempcnta_int
-        \int_set:Nn \l_ipsj_tempcntb_int { 1 }
-        
-        \int_while_do:nNnn { \l_ipsj_tempcntb_int } < { \l_ipsj_tempcnta_int }
-        {
-          \group_begin:
-          \int_add:Nn \l_ipsj_tempcntb_int { \l_ipsj_offset_email_int }
-          \textsuperscript
-          {
-            \use:c { #1 labelfont }
-            \int_to_alph:n { \l_ipsj_tempcntb_int } )
-            \ipsj_comma_or_relax_email:
-          }
-          \group_end:
-          \int_incr:N \l_ipsj_tempcntb_int
+        \tl_set:Nx \l_tmpa_tl { \seq_item:Nn \g__ipsj_authors_email_seq { \l_idx_int } }
+        \tl_if_empty:NF \l_tmpa_tl {
+          \int_incr:N \l__email_idx_int
+          \seq_put_right:NV \l_tmpa_seq { \@alph{\l__email_idx_int}\rparen }
         }
-        
-        \int_decr:N \l_ipsj_tempcntb_int
-        \int_gadd:Nn \l_ipsj_offset_email_int { \l_ipsj_tempcntb_int }
-      }
-    }
-    
-    \cs_if_exist:cT { #1 break@or@oneskip }
-    {
-      \use:c { #1 break@or@oneskip }
-    }
-    \int_incr:N \l_ipsj_count_int
-  }
-  \group_end:
-}
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Helper functions for authoroutput
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-\cs_new:Npn \ipsj_comma_or_relax_affilabel:
-{
-  \int_set:Nn \l_tmpa_int { \l_ipsj_tempcnta_int }
-  \int_decr:N \l_tmpa_int
-  \int_compare:nNnF { \l_tmpa_int } = { \l_ipsj_tempcntb_int }
-  { , }
-}
-
-\cs_new:Npn \ipsj_comma_or_relax_email:
-{
-  \int_set:Nn \l_tmpa_int { \l_ipsj_tempcnta_int }
-  \int_decr:N \l_tmpa_int
-  \int_set:Nn \l_tmpb_int { \l_ipsj_tempcntb_int }
-  \int_sub:Nn \l_tmpb_int { \l_ipsj_offset_email_int }
-  \int_compare:nNnF { \l_tmpa_int } = { \l_tmpb_int }
-  { , }
-}
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Print functions
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    {
-      \group_begin:
-      \int_zero:N \l_ipsj_offset_email_int
-      \int_set:Nn \l_ipsj_count_int { 1 }
-      \int_incr:N \g__ipsj_author_count_int
-      
-      \int_while_do:nNnn { \l_ipsj_count_int } < { \g__ipsj_author_count_int }
-        {
-          \mbox
-            {
-              \bool_if:NTF \g__ipsj_english_bool
-                {
-                  \use:c { authorname \int_use:N \l_ipsj_count_int }
-                }
-                {
-                  \use:c { #1 authorname \int_use:N \l_ipsj_count_int }
-                }
-              
-              % Add author labels (affiliations)
-              \null
-              \cs_if_exist:cT { authorlabel@num@ \int_use:N \l_ipsj_count_int }
-                {
-                  \int_set:Nn \l_ipsj_tempcnta_int 
-                    { \use:c { authorlabel@num@ \int_use:N \l_ipsj_count_int } }
-                  \int_incr:N \l_ipsj_tempcnta_int
-                  \int_set:Nn \l_ipsj_tempcntb_int { 1 }
-                  
-                  \group_begin:
-                  \int_while_do:nNnn { \l_ipsj_tempcntb_int } < { \l_ipsj_tempcnta_int }
-                    {
-                      \cs_if_exist:cT { authorlabel \int_use:N \l_ipsj_count_int @ \int_use:N \l_ipsj_tempcntb_int }
-                        {
-                          \tl_set:Nx \l_ipsj_temp_tl 
-                            { \use:c { authorlabel \int_use:N \l_ipsj_count_int @ \int_use:N \l_ipsj_tempcntb_int } }
-                          
-                          \textsuperscript
-                            {
-                              \use:c { #1 labelfont }
-                              % Check if affiliate exists, otherwise use paffiliate
-                              \cs_if_exist:cTF { affiliate@num@ \l_ipsj_temp_tl }
-                                {
-                                  \use:c { affiliate@num@ \l_ipsj_temp_tl }
-                                }
-                                {
-                                  \cs_if_exist:cT { paffiliate@num@ \l_ipsj_temp_tl }
-                                    {
-                                      \use:c { paffiliate@num@ \l_ipsj_temp_tl }
-                                    }
-                                }
-                              \ipsj_comma_or_relax_affilabel:
-                            }
-                        }
-                      \int_incr:N \l_ipsj_tempcntb_int
-                    }
-                  \group_end:
-                }
-              
-              % Add email labels
-              \cs_if_exist:cT { authoremail@num@ \int_use:N \l_ipsj_count_int }
-                {
-                  \int_set:Nn \l_ipsj_tempcnta_int 
-                    { \use:c { authoremail@num@ \int_use:N \l_ipsj_count_int } }
-                  \int_compare:nNnF { \l_ipsj_tempcnta_int } = { 0 }
-                    { \textsuperscript{,} }
-                  \int_incr:N \l_ipsj_tempcnta_int
-                  \int_set:Nn \l_ipsj_tempcntb_int { 1 }
-                  
-                  \int_while_do:nNnn { \l_ipsj_tempcntb_int } < { \l_ipsj_tempcnta_int }
-                    {
-                      \group_begin:
-                      \int_add:Nn \l_ipsj_tempcntb_int { \l_ipsj_offset_email_int }
-                      \textsuperscript
-                        {
-                          \use:c { #1 labelfont }
-                          \int_to_alph:n { \l_ipsj_tempcntb_int } )
-                          \ipsj_comma_or_relax_email:
-                        }
-                      \group_end:
-                      \int_incr:N \l_ipsj_tempcntb_int
-                    }
-                  
-                  \int_decr:N \l_ipsj_tempcntb_int
-                  \int_gadd:Nn \l_ipsj_offset_email_int { \l_ipsj_tempcntb_int }
-                }
-            }
-          
-          \cs_if_exist:cT { #1 break@or@oneskip }
-            {
-              \use:c { #1 break@or@oneskip }
-            }
-          \int_incr:N \l_ipsj_count_int
-    }
-  \group_end:
-}
-
-\cs_new:Npn \__ipsj_print_affiliations:
-{
-  \seq_if_empty:NF \g__ipsj_affiliations_seq
-  {
-    { \footnotesize
-      \int_set:Nn \l_tmpa_int { 1 }
-      \seq_map_inline:Nn \g__ipsj_affiliations_seq
-      {
-        $\c_math_superscript_token { \int_use:N \l_tmpa_int }$##1
-        \int_incr:N \l_tmpa_int
-        \seq_if_empty:NF \g__ipsj_paffiliations_seq
-        {
-          \seq_map_inline:Nn \g__ipsj_paffiliations_seq
-          {
-            , $\c_math_superscript_token { \int_use:N \l_tmpa_int }$####1
-            \int_incr:N \l_tmpa_int
-          }
+        \seq_if_empty:NF \l_tmpa_seq {
+          \textsuperscript{ \seq_use:Nn \l_tmpa_seq { , } }
         }
       }
+      \hskip\zw
     }
-  }
+    \par
+}
+
+
+
+\cs_new:Npn \__ipsj_affiliate_output:
+{
+    \renewcommand{\thefootnote}{\@arabic{\c@footnote}\protect\hphantom{\rparen}}
+    \seq_map_inline:Nn \g__ipsj_affiliations_seq {
+        \prop_get:NnN \g__ipsj_affiliation_labels_prop { ##1 } \l_tmpa_tl
+        \prop_get:NnN \g__ipsj_affiliation_indexes_prop { ##1 } \l_tmpa_int
+        \footnotetext[\l_tmpa_int]{ \l_tmpa_tl }
+    }
+    \renewcommand{\thefootnote}{\textdagger\@arabic{\c@footnote}}
+    %\renewcommand{\thefootnote}{\fnsymbol{footnote}}
+    \seq_map_inline:Nn \g__ipsj_paffiliations_seq {
+        \prop_get:NnN \g__ipsj_affiliation_labels_prop { ##1 } \l_tmpa_tl
+        \prop_get:NnN \g__ipsj_paffiliation_indexes_prop { ##1 } \l_tmpa_int
+        \footnotetext[\l_tmpa_int]{ \l_tmpa_tl }
+    }
+    \renewcommand{\thefootnote}{\@alph{\c@footnote}\rparen}
+    %\renewcommand{\thefootnote}{\fnsymbol{footnote}}
+    \int_zero:N \l__email_idx_int
+    \seq_map_inline:Nn \g__ipsj_authors_email_seq {
+      \tl_set:Nx \l_tmpa_tl { ##1 }
+      \tl_if_empty:NF \l_tmpa_tl {
+        \int_incr:N \l__email_idx_int
+        \footnotetext[\l__email_idx_int]{ \l_tmpa_tl }
+      }
+        
+    }
 }
 
 \cs_new:Npn \__ipsj_print_abstract:
@@ -838,7 +565,7 @@
 {
     \begin{minipage}{0.8\textwidth}
         \ekeywordfont
-        \textbf{Keywords:}\hskip.5em
+        {\bfseries\itshape Keywords:}\hskip.5em
         \c_space_tl \tl_use:N \g__ipsj_keyword_en_tl \par
     \end{minipage}\par
 }
@@ -860,12 +587,12 @@
 
 \NewDocumentCommand \figref { m }
 {
-  図\ref{#1}
+  図~\ref{#1}
 }
 
 \NewDocumentCommand \tabref { m }
 {
-  表\ref{#1}
+  表~\ref{#1}
 }
 
 \NewDocumentCommand \figrefstar { m }
