@@ -72,6 +72,9 @@
 % Journal type variable
 \tl_new:N \g__ipsj_journal_tl
 
+\tl_new:N \g__ipsj_journal_header_tl
+
+
 % Text storage variables
 \tl_new:N \g__ipsj_title_jp_tl
 \tl_new:N \g__ipsj_title_en_tl
@@ -220,9 +223,25 @@
 % Counter definitions
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\newcounter{巻数}
-\newcounter{号数}
-\newcounter{月数}
+\newcounter{volume} \c@volume\z@
+\newcounter{number} \c@number\z@
+\newcounter{month} \c@month\m@ne
+\newcounter{year} \c@year\m@ne
+
+\bool_if:NF \g__ipsj_english_bool {
+  \cs_set_eq:cN { c@巻数 } \c@volume
+  \cs_set_eq:cN { c@号数 } \c@number
+  \cs_set_eq:cN { c@月数 } \c@month
+  \cs_set_eq:cN { c@年数 } \c@year
+}
+
+\AtBeginDocument{\label{ipsj@firstpage}}
+\AtEndDocument{%
+ \clearpage
+ \addtocounter{page}{-1}%
+ \immediate\write\@auxout
+  {\string\newlabel{ipsj@lastpage}{{}{\thepage}}}%
+}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Public interface functions
@@ -362,6 +381,23 @@
 }
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Page Style
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\tl_gset:Nn \g__ipsj_journal_header_tl { 情報処理学会論文誌 }
+\def\headfontjp { \fontsize{12\JQ}{0\h} \selectfont\gtfamily\bfseries }
+\def\headfonten { \fontsize{13\JQ}{0\h} \selectfont\sffamily\bfseries }
+
+\NewPageStyle{IPSJPageStyle}{
+  yoko,
+  odd_head_format={\rlap{
+    {\headfontjp \tl_use:N \g__ipsj_journal_header_tl}
+    \hskip12\JQ{\headfonten Vol.\number\c@volume}
+    \hskip12\JQ{\headfonten No.\number\c@number}
+    \hskip12\JQ{\headfonten \pageref{ipsj@firstpage}--\pageref{ipsj@lastpage}}\
+  }}
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Make title implementation
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -405,7 +441,6 @@
     \par
     \begingroup
       \renewcommand{\thefootnote}{\fnsymbol{footnote}}%
-
       \if@twocolumn
         \ifnum\col@number=\@ne
           \@maketitle
@@ -423,7 +458,7 @@
         \tl_if_empty_p:o \@evenhead &&
         \tl_if_empty_p:o \@oddfoot &&
         \tl_if_empty_p:o \@evenfoot
-      )} { \thispagestyle{plain} }
+      )} { \thispagestyle{IPSJPageStyle} }
       \@thanks
     \endgroup
     \jlreq@endofmaketitle
@@ -692,6 +727,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % End of expl3 syntax
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\pagestyle{IPSJPageStyle}
 
 \ExplSyntaxOff
 
