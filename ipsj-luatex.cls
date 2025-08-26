@@ -191,7 +191,7 @@
 \LoadClass[
   paper=a4paper,
   twocolumn,
-  fontsize=9bp,
+  fontsize=9pt,
   line_length=26zw,
   number_of_lines=46,
   column_gap=8mm,
@@ -380,12 +380,71 @@
   \tl_gset:Nn \g__ipsj_editor_tl { #1 }
 }
 
+
+\int_new:N \g__ipsj_base_year_int
+\int_set:Nn \g__ipsj_base_year_int
+{
+  \str_case:nnF \g__ipsj_journal_tl {
+    { JIP } { 1992 }
+    { EEE } { 1992 }
+    { ACS } { 2007 }
+    { PRO } { 2007 }
+    { TOD } { 2007 }
+    { TOM } { 2007 }
+    { TBIO } { 2007 }
+    { CVA } { 2008 }
+    { SLDM } { 2007 }
+    { CDS } { 2010 }
+    { DC } { 2012 }
+    { DCON } { 2012 }
+    { TCE } { 2014 }    
+  } { 1959 }
+}
+
+\cs_new:Npn \__ipsj_month_name:
+{
+  \int_case:nnF {  \int_compare:nTF { \c@month < 0 } { \c@number } { \c@month } }
+  {
+    { 1  } { Jan. }
+    { 2  } { Feb. }
+    { 3  } { Mar. }
+    { 4  } { Apr. }
+    { 5  } { May }
+    { 6  } { June }
+    { 7  } { July }
+    { 8  } { Aug. }
+    { 9  } { Sep. }
+    { 10 } { Oct. }
+    { 11 } { Nov. }
+    { 12 } { Dec. }
+  } { ??? }
+}
+
+\cs_new:Npn \__ipsj_month_year: 
+{
+  \__ipsj_month_name:
+  \skip_horizontal:n { 0.5 \Cwd }
+  \int_compare:nTF { \c@year < 0 }
+    { \int_eval:n { \g__ipsj_base_year_int + \int_use:N \c@volume } }
+    { \c@year }
+}
+
+\cs_new:Npn \__ipsj_foot_year:
+{
+  \int_compare:nTF { \c@year < 0 }
+    { \int_eval:n { \g__ipsj_base_year_int + \int_use:N \c@volume } }
+    { \c@year }
+}
+
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Page Style
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \tl_gset:Nn \g__ipsj_journal_header_tl { 情報処理学会論文誌 }
 \def\headfontjp { \fontsize{12\JQ}{0\h} \selectfont\gtfamily\bfseries }
 \def\headfonten { \fontsize{13\JQ}{0\h} \selectfont\sffamily\bfseries }
+\def\footerfont { \fontsize{10\Q}{0\h}\normalfont\selectfont }
+\def\footerpagefont { \fontsize{13\Q}{0\h}\normalfont\selectfont }
 
 \NewPageStyle{IPSJPageStyle}{
   yoko,
@@ -393,9 +452,14 @@
     {\headfontjp \tl_use:N \g__ipsj_journal_header_tl}
     \hskip12\JQ{\headfonten Vol.\number\c@volume}
     \hskip12\JQ{\headfonten No.\number\c@number}
-    \hskip12\JQ{\headfonten \pageref{ipsj@firstpage}--\pageref{ipsj@lastpage}}\
-  }}
-}
+    \hskip12\JQ{\headfonten \pageref{ipsj@firstpage}--\pageref{ipsj@lastpage}}\ 
+    {\headfonten ( \__ipsj_month_year: ) }%
+  }},
+  odd_foot_format={
+    \rlap{\footerfont \copyright \ \__ipsj_foot_year: \ Information~Processing~Society~of~Japan}
+    \hfil
+    {\footerpagefont \thepage}
+}}%
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Make title implementation
