@@ -384,7 +384,7 @@
 \int_new:N \g__ipsj_base_year_int
 \int_set:Nn \g__ipsj_base_year_int
 {
-  \str_case:nnF \g__ipsj_journal_tl {
+  \str_case:VnF \g__ipsj_journal_tl {
     { JIP } { 1992 }
     { EEE } { 1992 }
     { ACS } { 2007 }
@@ -420,43 +420,76 @@
   } { ??? }
 }
 
+
+\cs_new:Npn \__ipsj_year:
+{
+  \int_compare:nTF { \c@year < 0 }
+    { \int_eval:n { \g__ipsj_base_year_int + \int_use:N \c@volume } }
+    { \c@year }
+}
+
 \cs_new:Npn \__ipsj_month_year: 
 {
   \__ipsj_month_name:
   \skip_horizontal:n { 0.5 \Cwd }
-  \int_compare:nTF { \c@year < 0 }
-    { \int_eval:n { \g__ipsj_base_year_int + \int_use:N \c@volume } }
-    { \c@year }
+  \__ipsj_year:
 }
 
-\cs_new:Npn \__ipsj_foot_year:
-{
-  \int_compare:nTF { \c@year < 0 }
-    { \int_eval:n { \g__ipsj_base_year_int + \int_use:N \c@volume } }
-    { \c@year }
+\tl_gset:Nn  \g__ipsj_journal_header_tl {
+  \bool_if:NTF \g__ipsj_english_bool {
+    \str_case:VnF \g__ipsj_journal_tl {
+      { JIP } { Journal~of~Information~Processing }
+      { ACS } { IPSJ~Transactions~on~Advanced~Computing~Systems }
+      { PRO } { IPSJ~Transactions~on~Programming }
+      { TOD } { IPSJ~Transactions~on~Databases }
+      { TOM } { IPSJ~Transactions~on~Mathematical~Modeling~and~Its~Applications }
+      { TBIO } { IPSJ~Transactions~on~Bioinformatics }
+      { CVA } { IPSJ~Transactions~on~Computer~Vision~and~Applications }
+      { SLDM } { IPSJ~Transactions~on~System~LSI~Design~Methodology }
+      { CDS } { IPSJ~Transactions~on~Consumer~Devices~\&~Systems }
+      { DC } { IPSJ~Transactions~on~Digital~Content }
+      { DCON } { IPSJ~Transactions~on~Digital~Content }
+      { TCE } { IPSJ~Transactions~on~Computers~and~Education }    
+    } { Electronic Preprint for Journal of Information Processing }
+  }
+  {
+    \str_case:VnF \g__ipsj_journal_tl {
+      { ACS } { 情報処理学会論文誌 \hskip12\JQ コンピューティングシステム }
+      { PRO } { 情報処理学会論文誌 \hskip12\JQ プログラミング }
+      { TOD } { 情報処理学会論文誌 \hskip12\JQ データベース }
+      { TOM } { 情報処理学会論文誌 \hskip12\JQ  数理モデル化と応用 }
+      { CDS } { 情報処理学会論文誌 \hskip12\JQ コンシューマ・デバイス\,\&\,システム }
+      { DC } { 情報処理学会論文誌 \hskip12\JQ デジタルコンテンツ }
+      { DCON } { 情報処理学会論文誌 \hskip12\JQ デジタルコンテンツ }
+      { TCE } { 情報処理学会論文誌 \hskip12\JQ 教育とコンピュータ }    
+    } { 情報処理学会論文誌 }
+  }
 }
-
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Page Style
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\tl_gset:Nn \g__ipsj_journal_header_tl { 情報処理学会論文誌 }
-\def\headfontjp { \fontsize{12\JQ}{0\h} \selectfont\gtfamily\bfseries }
-\def\headfonten { \fontsize{13\JQ}{0\h} \selectfont\sffamily\bfseries }
+\bool_if:NTF \g__ipsj_english_bool {
+  \def\headinfofont { \fontsize{13\JQ}{0\h} \selectfont\sffamily\bfseries }
+  \def\headnamefont { \fontsize{13\JQ}{0\h} \selectfont\sffamily\bfseries }
+} {
+  \def\headnamefont { \fontsize{12\JQ}{0\h} \selectfont\gtfamily\bfseries }
+  \def\headinfofont { \fontsize{13\JQ}{0\h} \selectfont\sffamily\bfseries }
+}
 \def\footerfont { \fontsize{10\Q}{0\h}\normalfont\selectfont }
 \def\footerpagefont { \fontsize{13\Q}{0\h}\normalfont\selectfont }
 
 \NewPageStyle{IPSJPageStyle}{
   yoko,
   odd_head_format={\rlap{
-    {\headfontjp \tl_use:N \g__ipsj_journal_header_tl}
-    \hskip12\JQ{\headfonten Vol.\number\c@volume}
-    \hskip12\JQ{\headfonten No.\number\c@number}
-    \hskip12\JQ{\headfonten \pageref{ipsj@firstpage}--\pageref{ipsj@lastpage}}\ 
-    {\headfonten ( \__ipsj_month_year: ) }%
+    {\headnamefont \tl_use:N \g__ipsj_journal_header_tl}
+    \hskip12\JQ{\headinfofont Vol.\number\c@volume}
+    \hskip12\JQ{\headinfofont No.\number\c@number}
+    \hskip12\JQ{\headinfofont \pageref{ipsj@firstpage}--\pageref{ipsj@lastpage}}\ 
+    {\headinfofont ( \__ipsj_month_year: ) }%
   }},
   odd_foot_format={
-    \rlap{\footerfont \copyright \ \__ipsj_foot_year: \ Information~Processing~Society~of~Japan}
+    \rlap{\footerfont \copyright \  \__ipsj_year: \  Information~Processing~Society~of~Japan}
     \hfil
     {\footerpagefont \thepage}
 }}%
@@ -792,6 +825,8 @@
 % End of expl3 syntax
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \pagestyle{IPSJPageStyle}
+
+\def\thepage{\the\c@page}
 
 \ExplSyntaxOff
 
