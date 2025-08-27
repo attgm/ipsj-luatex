@@ -193,7 +193,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \LoadClass[
-  paper=a4paper,
+  paper=a4,
   twocolumn,
   fontsize=9pt,
   line_length=26zw,
@@ -207,6 +207,17 @@
 \jlreqsetup {
   footnote_second_indent=2\zw
 }
+
+\bool_if:NTF \g__ipsj_english_bool {
+  \ExplSyntaxOff
+  \@setfontsize\normalsize{9.25pt}{12.80592pt}
+  \ExplSyntaxOn
+} {
+  \ExplSyntaxOff
+  \@setfontsize\normalsize{13\JQ}{21\h}
+  \ExplSyntaxOn
+}
+\normalsize
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Required packages
@@ -528,6 +539,23 @@
   }
 }
 
+%%
+% Heading
+%% 
+
+\def\sectionfont{ \fontsize{16\JQ}{21\h}\selectfont\bfseries }
+\def\subsectionfont{ \normalsize\selectfont\bfseries }
+
+\RenewDocumentCommand \thesection         {} {\@arabic\c@section.}
+\RenewDocumentCommand \thesubsection      {} {\thesection\@arabic\c@subsection}
+\RenewDocumentCommand \thesubsubsection   {} {\thesubsection.\@arabic\c@subsubsection}
+\RenewDocumentCommand \theparagraph     {} {\thesubsubsection.\@arabic\c@paragraph}
+\RenewDocumentCommand \thesubparagraph  {} {\theparagraph.\@arabic\c@subparagraph}
+
+\ModifyHeading{section}{font={\sectionfont}, lines=2.43}
+\ModifyHeading{subsection}{font={\subsectionfont}, lines=1}
+\ModifyHeading{subsubsection}{font={\subsectionfont}, lines=1}
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Make title implementation
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -628,9 +656,7 @@
   \end{center}
 }
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Author output function
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 \int_new:N \l_idx_int
 \int_new:N \l__email_idx_int
 \def\rparen{)}%%
@@ -798,13 +824,6 @@
   }
 }
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Section formatting
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-\renewcommand{\thesection}{\arabic{section}}
-\renewcommand{\thesubsection}{\thesection.\arabic{subsection}}
-\renewcommand{\thesubsubsection}{\thesubsection.\arabic{subsubsection}}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Special environments
@@ -859,7 +878,6 @@
 % End of expl3 syntax
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \pagestyle{IPSJPageStyle}
-
 \def\thepage{\the\c@page}
 
 \ExplSyntaxOff
