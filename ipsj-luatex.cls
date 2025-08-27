@@ -42,6 +42,8 @@
 \bool_new:N \g__ipsj_noauthor_bool
 \bool_new:N \g__ipsj_abstract_bool
 
+\bool_new:N \g__ipsj_preprint_bool
+
 % Transaction journal flags
 \bool_new:N \g__ipsj_PRO_bool
 \bool_new:N \g__ipsj_ACS_bool
@@ -149,6 +151,8 @@
   noauthor     .bool_gset:N = \g__ipsj_noauthor_bool,
   abstract     .bool_gset:N = \g__ipsj_abstract_bool,
   
+  preprint     .bool_gset:N = \g__ipsj_preprint_bool,
+
   % Transaction journals
   PRO          .code:n = { \bool_gset_true:N \g__ipsj_PRO_bool \tl_gset:Nn \g__ipsj_journal_tl { PRO } },
   ACS          .code:n = { \bool_gset_true:N \g__ipsj_ACS_bool \tl_gset:Nn \g__ipsj_journal_tl { ACS } },
@@ -476,23 +480,53 @@
   \def\headnamefont { \fontsize{12\JQ}{0\h} \selectfont\gtfamily\bfseries }
   \def\headinfofont { \fontsize{13\JQ}{0\h} \selectfont\sffamily\bfseries }
 }
+\def\headDOIfont{\fontsize{11\Q}{0\h}\sffamily\selectfont}
 \def\footerfont { \fontsize{10\Q}{0\h}\normalfont\selectfont }
 \def\footerpagefont { \fontsize{13\Q}{0\h}\normalfont\selectfont }
 
+\cs_new:Npn \__ipsj_number: 
+{
+  \bool_if:nF
+  {
+    \str_if_eq_p:Vn \g__ipsj_journal_tl { CVA } ||
+    \str_if_eq_p:Vn \g__ipsj_journal_tl { TBIO } ||
+    \str_if_eq_p:Vn \g__ipsj_journal_tl { SLDM } ||
+    \str_if_eq_p:Vn \g__ipsj_journal_tl { JIP } ||
+    \bool_if_p:N \g__ipsj_preprint_bool
+  }
+  { \hskip1em { \headinfofont { No.\int_use:N \c@number } } }
+}
+
+\cs_new:Npn \__ipsj_doi:
+{
+  \smash{\raisebox{-6mm}{\rlap{\headDOIfont
+  \str_case:Vn \g__ipsj_journal_tl {
+    { TBIO } { [DOI: 10.2197/ipsjtbio.\number\c@volume.\pageref{ipsj@firstpage}] }
+    { CVA }  { [DOI: 10.2197/ipsjtcva.\number\c@volume.\pageref{ipsj@firstpage}] }
+    { SLDM } { [DOI: 10.2197/ipsjtsldm.\number\c@volume.\pageref{ipsj@firstpage}] }
+    { JIP }  { [DOI: 10.2197/ipsjjip.\number\c@volume.\pageref{ipsj@firstpage}] }
+  }
+  }}}
+}
+
 \NewPageStyle{IPSJPageStyle}{
   yoko,
-  odd_head_format={\rlap{
-    {\headnamefont \tl_use:N \g__ipsj_journal_header_tl}
-    \hskip12\JQ{\headinfofont Vol.\number\c@volume}
-    \hskip12\JQ{\headinfofont No.\number\c@number}
-    \hskip12\JQ{\headinfofont \pageref{ipsj@firstpage}--\pageref{ipsj@lastpage}}\ 
-    {\headinfofont ( \__ipsj_month_year: ) }%
-  }},
+  odd_head_format={
+    \rlap{
+      {\headnamefont \tl_use:N \g__ipsj_journal_header_tl}
+      \hskip12\JQ{\headinfofont Vol.\number\c@volume}
+      \__ipsj_number:
+      \hskip12\JQ{\headinfofont \pageref{ipsj@firstpage}--\pageref{ipsj@lastpage}}\ 
+      {\headinfofont ( \__ipsj_month_year: ) }
+    }
+    \__ipsj_doi:
+  },
   odd_foot_format={
     \rlap{\footerfont \copyright \  \__ipsj_year: \  Information~Processing~Society~of~Japan}
     \hfil
     {\footerpagefont \thepage}
-}}%
+  }
+}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Make title implementation
