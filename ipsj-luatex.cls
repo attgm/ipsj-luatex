@@ -195,7 +195,7 @@
 \LoadClass[
   paper=a4,
   twocolumn,
-  fontsize=9pt,
+  fontsize=9.25pt,
   line_length=26zw,
   number_of_lines=46,
   column_gap=8mm,
@@ -205,7 +205,17 @@
 
 
 \jlreqsetup {
-  footnote_second_indent=2\zw
+  footnote_second_indent=2\zw,
+  appendix_counter = {
+    section = { value = 0, the = {\arabic{section}} },
+    subsection = { value = 0, the = {\arabic{subsection}} },
+    subsubsection = { value = 0, the = {\arabic{subsubsection}} },
+  },
+  appendix_heading = {
+    section = {label_format = {A.\thesection}},
+    subsection = {label_format = {A.\thesection.\thesubsection}},
+    subsubsection = {label_format = {A.\thesection.\thesubsection.\thesubsubsection}}
+  }
 }
 
 \bool_if:NTF \g__ipsj_english_bool {
@@ -829,12 +839,17 @@
 % Special environments
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+\NewRuninHeading{ackheading}{1}{
+  font=\normalsize\selectfont\bfseries, indent=\zw, after_label_space=\zw, number=false
+}
+
 \NewDocumentEnvironment { acknowledgment } { }
 {
-  \section*{謝辞}
+  \ackheading{謝辞}
 }
 {
 }
+
 
 \NewDocumentEnvironment { biography } { }
 {
@@ -854,11 +869,21 @@
 % Bibliography formatting
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+\NewBlockHeading{bioheading}{1}{
+  font=\normalsize\selectfont\bfseries,lines=1, number=false
+}
+
 \renewenvironment{thebibliography}[1]
 {
-  \section*{参考文献}
+  \bool_if:NTF \g__ipsj_english_bool {
+    \footnotesize\baselineskip12\h
+  } {
+    \small\baselineskip15\h
+  }
+  \subsubsection*{参考文献}
   \list{\@biblabel{\@arabic\c@enumiv}}
     {\settowidth\labelwidth{\@biblabel{#1}}
+     \labelsep=1\zw
      \leftmargin\labelwidth
      \advance\leftmargin\labelsep
      \@openbib@code
