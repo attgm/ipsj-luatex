@@ -76,6 +76,7 @@
 
 \tl_new:N \g__ipsj_journal_header_tl
 \tl_new:N \g__ipsj_appendix_name_tl
+\tl_new:N \g__ipsj_reference_name_tl
 
 % Text storage variables
 \tl_new:N \g__ipsj_title_jp_tl
@@ -202,12 +203,12 @@
   }
 }
 
-\tl_gset:Nn \g__ipsj_appendix_name_tl {
-  \bool_if:NTF \g__ipsj_english_bool {
-    Appendix
-  } {
-    \__ipsj_flexible_hbox:nn { 5\zw } { 付録 }
-  }
+\bool_if:NTF \g__ipsj_english_bool {
+  \tl_gset:Nn \g__ipsj_appendix_name_tl { Appendix }
+  \tl_gset:Nn \g__ipsj_reference_name_tl { References }
+} {
+  \tl_gset:Nn \g__ipsj_appendix_name_tl { \__ipsj_flexible_hbox:nn { 5\zw } { 付録 } }
+  \tl_gset:Nn \g__ipsj_reference_name_tl { 参考文献 }
 }
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -893,12 +894,12 @@
 
 \renewenvironment{thebibliography}[1]
 {
+  \subsubsection*{\g__ipsj_reference_name_tl}\par
   \bool_if:NTF \g__ipsj_english_bool {
     \footnotesize\baselineskip12\h
   } {
     \small\baselineskip15\h
   }
-  \subsubsection*{参考文献}
   \list{\@biblabel{\@arabic\c@enumiv}}
     {\settowidth\labelwidth{\@biblabel{#1}}
      \labelsep=1\zw
