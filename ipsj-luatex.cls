@@ -75,7 +75,7 @@
 \tl_new:N \g__ipsj_journal_tl
 
 \tl_new:N \g__ipsj_journal_header_tl
-
+\tl_new:N \g__ipsj_appendix_name_tl
 
 % Text storage variables
 \tl_new:N \g__ipsj_title_jp_tl
@@ -187,11 +187,34 @@
 % Process options
 \ProcessKeysOptions { ipsj }
 
+\cs_new:Npn \__ipsj_flexible_hbox:nn #1 #2
+{
+  \cs_if_exist:NTF \ltjsetparameter {
+    \leavevmode\hbox to #1{%
+      \ltjsetparameter{kanjiskip=0pt plus 1fill minus 1fill}%
+      \ltjsetparameter{xkanjiskip=0pt plus 1fill minus 1fill}%
+      #2
+    }%
+  }{
+    \leavevmode\hbox to #1{%
+      \spaceskip\z@ \@plus 1fill \@minus 1fill
+      \xspaceskip\spaceskip #2}%
+  }
+}
+
+\tl_gset:Nn \g__ipsj_appendix_name_tl {
+  \bool_if:NTF \g__ipsj_english_bool {
+    Appendix
+  } {
+    \__ipsj_flexible_hbox:nn { 5\zw } { 付録 }
+  }
+}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Load base class
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+%  \@setfontsize\normalsize{13\JQ}{21\h}
 \LoadClass[
   paper=a4,
   twocolumn,
@@ -204,8 +227,13 @@
 ]{jlreq}
 
 
+
+
 \jlreqsetup {
   footnote_second_indent=2\zw,
+  appendix_precode = {
+    \section*{\tl_use:N \g__ipsj_appendix_name_tl}
+  },
   appendix_counter = {
     section = { value = 0, the = {\arabic{section}} },
     subsection = { value = 0, the = {\arabic{subsection}} },
@@ -218,16 +246,6 @@
   }
 }
 
-\bool_if:NTF \g__ipsj_english_bool {
-  \ExplSyntaxOff
-  \@setfontsize\normalsize{9.25pt}{12.80592pt}
-  \ExplSyntaxOn
-} {
-  \ExplSyntaxOff
-  \@setfontsize\normalsize{13\JQ}{21\h}
-  \ExplSyntaxOn
-}
-\normalsize
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Required packages
