@@ -75,7 +75,8 @@
 \tl_new:N \g__ipsj_journal_tl
 
 \tl_new:N \g__ipsj_journal_header_tl
-
+\tl_new:N \g__ipsj_appendix_name_tl
+\tl_new:N \g__ipsj_reference_name_tl
 
 % Text storage variables
 \tl_new:N \g__ipsj_title_jp_tl
@@ -187,15 +188,38 @@
 % Process options
 \ProcessKeysOptions { ipsj }
 
+\cs_new:Npn \__ipsj_flexible_hbox:nn #1 #2
+{
+  \cs_if_exist:NTF \ltjsetparameter {
+    \leavevmode\hbox to #1{%
+      \ltjsetparameter{kanjiskip=0pt plus 1fill minus 1fill}%
+      \ltjsetparameter{xkanjiskip=0pt plus 1fill minus 1fill}%
+      #2
+    }%
+  }{
+    \leavevmode\hbox to #1{%
+      \spaceskip\z@ \@plus 1fill \@minus 1fill
+      \xspaceskip\spaceskip #2}%
+  }
+}
+
+\bool_if:NTF \g__ipsj_english_bool {
+  \tl_gset:Nn \g__ipsj_appendix_name_tl { Appendix }
+  \tl_gset:Nn \g__ipsj_reference_name_tl { References }
+} {
+  \tl_gset:Nn \g__ipsj_appendix_name_tl { \__ipsj_flexible_hbox:nn { 5\zw } { 付録 } }
+  \tl_gset:Nn \g__ipsj_reference_name_tl { 参考文献 }
+}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Load base class
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+%  \@setfontsize\normalsize{13\JQ}{21\h}
 \LoadClass[
-  paper=a4paper,
+  paper=a4,
   twocolumn,
-  fontsize=9pt,
+  fontsize=9.25pt,
   line_length=26zw,
   number_of_lines=46,
   column_gap=8mm,
@@ -204,9 +228,25 @@
 ]{jlreq}
 
 
+
+
 \jlreqsetup {
-  footnote_second_indent=2\zw
+  footnote_second_indent=2\zw,
+  appendix_precode = {
+    \section*{\tl_use:N \g__ipsj_appendix_name_tl}
+  },
+  appendix_counter = {
+    section = { value = 0, the = {\arabic{section}} },
+    subsection = { value = 0, the = {\arabic{subsection}} },
+    subsubsection = { value = 0, the = {\arabic{subsubsection}} },
+  },
+  appendix_heading = {
+    section = {label_format = {A.\thesection}},
+    subsection = {label_format = {A.\thesection.\thesubsection}},
+    subsubsection = {label_format = {A.\thesection.\thesubsection.\thesubsubsection}}
+  }
 }
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Required packages
@@ -528,6 +568,23 @@
   }
 }
 
+%%
+% Heading
+%% 
+
+\def\sectionfont{ \fontsize{16\JQ}{21\h}\selectfont\bfseries }
+\def\subsectionfont{ \normalsize\selectfont\bfseries }
+
+\RenewDocumentCommand \thesection         {} {\@arabic\c@section.}
+\RenewDocumentCommand \thesubsection      {} {\thesection\@arabic\c@subsection}
+\RenewDocumentCommand \thesubsubsection   {} {\thesubsection.\@arabic\c@subsubsection}
+\RenewDocumentCommand \theparagraph     {} {\thesubsubsection.\@arabic\c@paragraph}
+\RenewDocumentCommand \thesubparagraph  {} {\theparagraph.\@arabic\c@subparagraph}
+
+\ModifyHeading{section}{font={\sectionfont}, lines=2.43}
+\ModifyHeading{subsection}{font={\subsectionfont}, lines=1}
+\ModifyHeading{subsubsection}{font={\subsectionfont}, lines=1}
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Make title implementation
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -628,9 +685,7 @@
   \end{center}
 }
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Author output function
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 \int_new:N \l_idx_int
 \int_new:N \l__email_idx_int
 \def\rparen{)}%%
@@ -798,24 +853,22 @@
   }
 }
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Section formatting
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-\renewcommand{\thesection}{\arabic{section}}
-\renewcommand{\thesubsection}{\thesection.\arabic{subsection}}
-\renewcommand{\thesubsubsection}{\thesubsection.\arabic{subsubsection}}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Special environments
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+\NewRuninHeading{ackheading}{1}{
+  font=\normalsize\selectfont\bfseries, indent=\zw, after_label_space=\zw, number=false
+}
+
 \NewDocumentEnvironment { acknowledgment } { }
 {
-  \section*{謝辞}
+  \ackheading{謝辞}
 }
 {
 }
+
 
 \NewDocumentEnvironment { biography } { }
 {
@@ -835,11 +888,21 @@
 % Bibliography formatting
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+\NewBlockHeading{bioheading}{1}{
+  font=\normalsize\selectfont\bfseries,lines=1, number=false
+}
+
 \renewenvironment{thebibliography}[1]
 {
-  \section*{参考文献}
+  \subsubsection*{\g__ipsj_reference_name_tl}\par
+  \bool_if:NTF \g__ipsj_english_bool {
+    \footnotesize\baselineskip12\h
+  } {
+    \small\baselineskip15\h
+  }
   \list{\@biblabel{\@arabic\c@enumiv}}
     {\settowidth\labelwidth{\@biblabel{#1}}
+     \labelsep=1\zw
      \leftmargin\labelwidth
      \advance\leftmargin\labelsep
      \@openbib@code
@@ -859,7 +922,6 @@
 % End of expl3 syntax
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \pagestyle{IPSJPageStyle}
-
 \def\thepage{\the\c@page}
 
 \ExplSyntaxOff
