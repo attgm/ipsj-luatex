@@ -59,17 +59,8 @@
 \bool_new:N \g__ipsj_JIP_bool
 
 % Paper type flags
-\bool_new:N \g__ipsj_research_bool
-\bool_new:N \g__ipsj_short_bool
-\bool_new:N \g__ipsj_systems_bool
-\bool_new:N \g__ipsj_services_bool
-\bool_new:N \g__ipsj_devices_bool
-\bool_new:N \g__ipsj_practice_bool
-\bool_new:N \g__ipsj_content_bool
-\bool_new:N \g__ipsj_data_bool
-\bool_new:N \g__ipsj_survey_bool
-\bool_new:N \g__ipsj_express_bool
-\bool_new:N \g__ipsj_system_bool
+\tl_new:N \g__ipsj_paper_type_tl
+\tl_new:N \g__ipsj_paper_type_name_tl
 
 % Journal type variable
 \tl_new:N \g__ipsj_journal_tl
@@ -77,6 +68,7 @@
 \tl_new:N \g__ipsj_journal_header_tl
 \tl_new:N \g__ipsj_appendix_name_tl
 \tl_new:N \g__ipsj_reference_name_tl
+\tl_new:N \g__ipsj_Acknowledgments_name_tl
 
 % Text storage variables
 \tl_new:N \g__ipsj_title_jp_tl
@@ -150,7 +142,6 @@
   online       .bool_gset:N = \g__ipsj_online_bool,
   draft        .bool_gset:N = \g__ipsj_draft_bool,
   noauthor     .bool_gset:N = \g__ipsj_noauthor_bool,
-  abstract     .bool_gset:N = \g__ipsj_abstract_bool,
   
   preprint     .bool_gset:N = \g__ipsj_preprint_bool,
 
@@ -169,18 +160,33 @@
   JIP          .code:n = { \bool_gset_true:N \g__ipsj_JIP_bool \bool_gset_true:N \g__ipsj_english_bool \tl_gset:Nn \g__ipsj_journal_tl { JIP } },
   
   % Paper types
-  Research     .bool_gset:N = \g__ipsj_research_bool,
-  Short        .bool_gset:N = \g__ipsj_short_bool,
-  systems      .bool_gset:N = \g__ipsj_systems_bool,
-  services     .bool_gset:N = \g__ipsj_services_bool,
-  devices      .bool_gset:N = \g__ipsj_devices_bool,
-  Practice     .bool_gset:N = \g__ipsj_practice_bool,
-  Content      .bool_gset:N = \g__ipsj_content_bool,
-  Data         .bool_gset:N = \g__ipsj_data_bool,
-  Survey       .bool_gset:N = \g__ipsj_survey_bool,
-  Express      .bool_gset:N = \g__ipsj_express_bool,
-  system       .bool_gset:N = \g__ipsj_system_bool,
-  
+  Research     .code:n = { \tl_gset:Nn \g__ipsj_paper_type_tl { research } },
+  research     .code:n = { \tl_gset:Nn \g__ipsj_paper_type_tl { research } },
+  Short        .code:n = { \tl_gset:Nn \g__ipsj_paper_type_tl { short } },
+  short        .code:n = { \tl_gset:Nn \g__ipsj_paper_type_tl { short } },
+  systems      .code:n = { \tl_gset:Nn \g__ipsj_paper_type_tl { systems } },
+  services     .code:n = { \tl_gset:Nn \g__ipsj_paper_type_tl { services } },
+  devices      .code:n = { \tl_gset:Nn \g__ipsj_paper_type_tl { devices } },
+  Practice     .code:n = { \tl_gset:Nn \g__ipsj_paper_type_tl { practice } },
+  practice     .code:n = { \tl_gset:Nn \g__ipsj_paper_type_tl { practice } },
+  Content      .code:n = { \tl_gset:Nn \g__ipsj_paper_type_tl { content } },
+  content      .code:n = { \tl_gset:Nn \g__ipsj_paper_type_tl { content } },
+  data         .code:n = { \tl_gset:Nn \g__ipsj_paper_type_tl { data } },
+  Data         .code:n = { \tl_gset:Nn \g__ipsj_paper_type_tl { data } },
+  Survey       .code:n = { \tl_gset:Nn \g__ipsj_paper_type_tl { survey } },
+  survey       .code:n = { \tl_gset:Nn \g__ipsj_paper_type_tl { survey } },
+  Express      .code:n = { \tl_gset:Nn \g__ipsj_paper_type_tl { express } },
+  express      .code:n = { \tl_gset:Nn \g__ipsj_paper_type_tl { express } },
+  system       .code:n = { \tl_gset:Nn \g__ipsj_paper_type_tl { system } },
+  invited      .code:n = { \tl_gset:Nn \g__ipsj_paper_type_tl { invited } },
+  sigrecommended  .code:n = { \tl_gset:Nn \g__ipsj_paper_type_tl { sigrecommended } },
+  invitedshort    .code:n = { \tl_gset:Nn \g__ipsj_paper_type_tl { invitedshort } },  
+  recommendedshort  .code:n = { \tl_gset:Nn \g__ipsj_paper_type_tl { recommendedshort } },
+  technode          .code:n = { \tl_gset:Nn \g__ipsj_paper_type_tl { technote } },
+  recommendedresearch .code:n = { \tl_gset:Nn \g__ipsj_paper_type_tl { recommendedresearch } },
+  recommendedpractice .code:n = { \tl_gset:Nn \g__ipsj_paper_type_tl { recommendedpractice } },
+  recommendedcontent  .code:n = { \tl_gset:Nn \g__ipsj_paper_type_tl { recommendedcontent } },
+  abstract     .code:n = { \bool_gset_true:N \g__ipsj_abstract_bool \tl_gset:Nn \g__ipsj_paper_type_tl { abstract } },     
   % Pass unknown options to jlreq
   unknown      .code:n = { \PassOptionsToClass{\l_keys_key_tl}{jlreq} }
 }
@@ -206,9 +212,11 @@
 \bool_if:NTF \g__ipsj_english_bool {
   \tl_gset:Nn \g__ipsj_appendix_name_tl { Appendix }
   \tl_gset:Nn \g__ipsj_reference_name_tl { References }
+  \tl_gset:Nn \g__ipsj_Acknowledgments_name_tl { Acknowledgments }
 } {
   \tl_gset:Nn \g__ipsj_appendix_name_tl { \__ipsj_flexible_hbox:nn { 5\zw } { 付録 } }
   \tl_gset:Nn \g__ipsj_reference_name_tl { 参考文献 }
+  \tl_gset:Nn \g__ipsj_Acknowledgments_name_tl { 謝辞 }
 }
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -224,11 +232,11 @@
   number_of_lines=46,
   column_gap=8mm,
   open_bracket_pos=nibu_tentsuki,
-  head_space=22mm
+  head_space=18mm
 ]{jlreq}
 
-
-
+\setlength{\headheight}{ 5 mm }
+\setlength{\headsep}{ 9.5mm }
 
 \jlreqsetup {
   footnote_second_indent=2\zw,
@@ -479,9 +487,67 @@
   \__ipsj_year:
 }
 
+\tl_gset:Nn  \g__ipsj_paper_type_name_tl {
+  \bool_if:NTF \g__ipsj_english_bool {
+    \str_case:VnF \g__ipsj_paper_type_tl {
+      { research } { Research Paper }
+      { short } { Short Paper }
+      { systems } { Paper on Consumer Systems } 
+      { services } { Paper on Consumer Services }
+      { devices } { Paper on Consumer Devices }
+      { practice } { Practice Paper }
+      { content } { Content Paper }
+      { data } { Database/Software Paper }
+      { survey } { Survey Paper }
+      { express } { Express Paper }
+      { system } { Systems Paper }
+      { invited } { Invited Paper }
+      { sigrecommended } { Recommended Paper }
+      { invitedshort } { Invited Short Paper }
+      { recommendedshort } { Recommended Short Paper }
+      { technote } { Technical Note }
+      { recommendedresearch } { Recommended Research Paper }
+      { recommendedpractice } { Recommended Practice Pape }
+      { recommendedcontent } { Recommended Content Paper }
+      { abstract } { Presentation Abstract }
+    } {
+      \str_case:VnF \g__ipsj_journal_tl {
+        { TCE } { Regular Paper }
+        { TBIO } { Original Paper }
+        { CVA } { Regular Paper }
+        { SLDM } { Regular Paper }
+      } { \par }
+    }
+  }
+  {
+    \str_case:VnF \g__ipsj_paper_type_tl {
+      { research } { 研究論文 }
+      { short } { ショートペーパー }
+      { systems } { コンシューマ・システム論文 }
+      { services } { コンシューマ・サービス論文 }
+      { devices } { コンシューマ・デバイス論文 }
+      { practice } { 産業論文 }
+      { content } { 作品論文 }
+      { invited } { 招待論文 }
+      { sigrecommended } { \str_if_eq:VnTF \g__ipsj_journal_tl { TCE } { 研究会推薦論文 } { 推薦論文 }}
+      { invitedshort } { 招待ショートペーパー }
+      { recommendedshort } { 研究会推薦ショートペーパー }
+      { technote } { テクニカルノート }
+      { recommendedresearch } {  推薦研究論文 }
+      { recommendedpractice } { 推薦産業論文 }
+      { recommendedcontent } { 推薦作品論文 }
+      { abstract } { 発表概要 }
+    } { \str_case:VnF \g__ipsj_journal_tl {
+        { TCE } { 論文 }
+      } { \par }
+    }
+  }
+}
+
+
 \tl_gset:Nn  \g__ipsj_journal_header_tl {
   \bool_if:NTF \g__ipsj_english_bool {
-    \str_case:VnF \g__ipsj_journal_tl {
+    \str_case:VnF \g__ipsj_paper_type_tl {
       { JIP } { Journal~of~Information~Processing }
       { ACS } { IPSJ~Transactions~on~Advanced~Computing~Systems }
       { PRO } { IPSJ~Transactions~on~Programming }
@@ -494,7 +560,7 @@
       { DC } { IPSJ~Transactions~on~Digital~Content }
       { DCON } { IPSJ~Transactions~on~Digital~Content }
       { TCE } { IPSJ~Transactions~on~Computers~and~Education }    
-    } { Electronic Preprint for Journal of Information Processing }
+    } { Electronic~Preprint~for~Journal~of~Information~Processing }
   }
   {
     \str_case:VnF \g__ipsj_journal_tl {
@@ -551,6 +617,7 @@
 
 \NewPageStyle{IPSJPageStyle}{
   yoko,
+  running_head_position={ top-left },
   odd_head_format={
     \rlap{
       {\headnamefont \tl_use:N \g__ipsj_journal_header_tl}
@@ -571,6 +638,7 @@
 %%
 % Heading
 %% 
+
 
 \def\sectionfont{ \fontsize{16\JQ}{21\h}\selectfont\bfseries }
 \def\subsectionfont{ \normalsize\selectfont\bfseries }
@@ -657,7 +725,7 @@
 
 \RenewDocumentCommand \@maketitle { }
 {
-  { \shubetufont }
+  { \shubetufont \tl_use:N \g__ipsj_paper_type_name_tl }
   \begin{center}
   \vskip\shubetutitlesep  % Title
   { \titlefont \tl_use:N \g__ipsj_title_jp_tl } \par
@@ -864,7 +932,7 @@
 
 \NewDocumentEnvironment { acknowledgment } { }
 {
-  \ackheading{謝辞}
+  \ackheading{\tl_use:N \g__ipsj_Acknowledgments_name_tl}
 }
 {
 }
@@ -872,7 +940,6 @@
 
 \NewDocumentEnvironment { biography } { }
 {
-  \section*{著者紹介}
   \begin{description}
 }
 {
