@@ -270,6 +270,9 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Font settings
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%\def\sfdefault{lg}
+%\def\rmdefault{ptm}
+%\def\ttdefault{pcr}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Counter definitions
@@ -516,7 +519,7 @@
         { TBIO } { Original Paper }
         { CVA } { Regular Paper }
         { SLDM } { Regular Paper }
-      } { \par }
+      } { \ \relax\par }
     }
   }
   {
@@ -539,7 +542,7 @@
       { abstract } { 発表概要 }
     } { \str_case:VnF \g__ipsj_journal_tl {
         { TCE } { 論文 }
-      } { \par }
+      } { \vskip\zh\relax\par }
     }
   }
 }
@@ -896,15 +899,20 @@
 
 \NewDocumentCommand \ecaption { m }
 {
-  \bool_if:NTF \g__ipsj_english_bool
-  {
-    \caption{#1}
-  }
-  {
-    \addtocounter{figure}{-1}
-    \addtocounter{table}{-1}
-    { \small #1 }
-  }
+  % Second (English) caption line without stepping counters.
+  % Expected usage: \caption{...} followed by \ecaption{...}.
+  \begingroup
+    \@parboxrestore
+    \small
+    \cs_set:Npx \l_tmpa_tl { \csname the\@captype\endcsname }
+    \tl_set:Nx \l_tmpb_tl
+      {
+        \str_if_eq:eeTF { \@captype } { figure }
+          { Fig.~\l_tmpa_tl }
+          { Table~\l_tmpa_tl }
+      }
+    \@makecaption{\l_tmpb_tl}{#1}\par
+  \endgroup
 }
 
 \NewDocumentCommand \CaptionType { m }
